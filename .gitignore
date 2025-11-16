@@ -1,0 +1,5 @@
+financial.db
+user.db
+__pycache__/
+*.pyc
+.DS_Store
