@@ -16,6 +16,7 @@ sql_file_drop_stock_price_table = 'app/db/sql/drop_stock_price_table.sql'
 sql_file_select_symbol_stock_detail = 'app/db/sql/select_symbol_stock_detail.sql'
 sql_file_select_table_name_financial = 'app/db/sql/select_table_name_financial.sql'
 sql_file_select_last_date_stock_price = 'app/db/sql/select_last_date_stock_price.sql'
+sql_file_select_last_date_index_price = 'app/db/sql/select_last_date_index_price.sql'
 sql_file_select_all_stock_price = 'app/db/sql/select_all_stock_price.sql'
 sql_file_select_all_index_price = 'app/db/sql/select_all_index_price.sql'
 sql_file_select_several_stock_price = 'app/db/sql/select_several_stock_price.sql'
@@ -46,6 +47,8 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_select_table_name_financial
         case 'select_last_date_stock_price':
             return sql_file_select_last_date_stock_price
+        case 'select_last_date_index_price':
+            return sql_file_select_last_date_index_price
         case 'select_all_stock_price':
             return sql_file_select_all_stock_price
         case 'select_all_index_price':
