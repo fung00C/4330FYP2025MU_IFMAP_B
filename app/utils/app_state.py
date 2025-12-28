@@ -31,6 +31,16 @@ _tickers: Optional[List[str]] = None
 _tickers_lock = threading.Lock()
 _tickers_last_updated: Optional[float] = None
 
+# model
+_model: Optional[any] = None
+
+# model variables
+_input_shape = None
+_timesteps = None
+_num_features = None
+_total_inputs = None
+_data_type = None
+
 def get_sql_path(arg) -> Optional[str]:
     match arg:
         case 'create_index_price_table':
@@ -97,3 +107,27 @@ def get_tickers_last_updated() -> Optional[float]:
     """Return epoch timestamp of last tickers update, or None if never set."""
     with _tickers_lock:
         return _tickers_last_updated
+
+def set_model_params(timesteps, num_features, total_inputs) -> None:
+    global _timesteps, _num_features, _total_inputs
+    _timesteps = timesteps
+    _num_features = num_features
+    _total_inputs = total_inputs
+
+def get_model_params(arg) -> Optional[str]:
+    match arg:
+        case 'timesteps':
+            return _timesteps
+        case 'num_features':
+            return _num_features
+        case 'total_inputs':
+            return _total_inputs
+        case _:
+            return None
+        
+def set_model(model_instance) -> None:
+    global _model
+    _model = model_instance
+    
+def get_model():
+    return _model
