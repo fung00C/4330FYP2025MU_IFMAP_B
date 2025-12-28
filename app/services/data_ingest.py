@@ -1,19 +1,20 @@
 # app/services/data_ingest.py
 import pandas as pd
 import logging
+import sqlite3
 from typing import List, Optional
 
 from app.services.yahoo_client import download_index, download_stocks
 from app.services.data_clean import clean_index_df, clean_stock_panel
 from app.services.data_refresh import refresh_tickers_list
+from app.utils.file import open_sql_file
 from app.utils.pandas_helper import append_df
-from app.utils.app_state import get_fin_db
-from app.utils.app_state import set_tickers
+from app.utils.app_state import get_fin_db, get_sql_path, set_tickers
 from app.repositories.meta import get_ticker_symbols
 
 logger = logging.getLogger(__name__)
 
-# save_index_data
+# Save index data into financial.db
 def save_index_data(ticker: str = "^GSPC", start_date: str = "2015-01-01", end_date: str = "2025-10-01"): # None
     failed_tickers = []  # track failed tickers
     try:
@@ -31,7 +32,7 @@ def save_index_data(ticker: str = "^GSPC", start_date: str = "2015-01-01", end_d
         print(f"❌ An error occurred during download: {e}")
         return {"success": False, "error": str(e)}
 
-# save_stock_data
+# Save stock data into financial.db
 def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date: str = "2025-10-01"): # None
     failed_tickers = []  # track failed tickers
     try:
@@ -52,9 +53,9 @@ def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date
         print(f"❌ An error occurred during download: {e}")
         return {"success": False, "error": str(e)}
 
+# Save stock detail from CSV to financial.db
 def save_stock_detail(database: str = "financial.db"):
     try:
-        import pandas as pd
         df = pd.read_csv('sp500_companies.csv')  # Load CSV file
         table_name = 'stock_detail'
         df.to_sql(table_name, get_fin_db() , if_exists='replace', index=False)  # delete table if exists, create table, write DataFrame to SQL table, index=False : avoid to write DataFrame index
@@ -78,3 +79,21 @@ def store_ticker_symbols(app):
     except Exception as e:
         logger.exception("Unexpected error while setting app.state.tickers: %s", e) # unexpected errors should be visible in logs for troubleshooting
     set_tickers(tickers) # always set into utils cache as the canonical source for non-request code
+
+# Save index perdictions into financial.db
+def save_index_prediction(data: List[any]):
+    try:
+        insert_query = """
+        INSERT INTO index_predictions (predicted_scaled, predicted_real, last_actual_close, input_features_length)
+        VALUES (?, ?, ?, ?);
+        """
+        db = get_fin_db()
+        cursor = db.cursor()
+        sql_template = open_sql_file(get_sql_path("insert_index_predictions_data"))
+        cursor.execute(sql_template, (data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["input_features_length"]))
+        db.commit()
+        print(f"✅ Index prediction saved successfully.")
+        return True
+    except sqlite3.Error as e:
+        print(f"❌ An error occurred while saving index prediction: {e}")
+        return False

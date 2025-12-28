@@ -7,8 +7,9 @@ from sklearn.preprocessing import StandardScaler
 from app.services.data_ingest import save_stock_data, save_index_data
 from app.repositories.indexes import get_last_index_date, get_several_index_price
 from app.repositories.stocks import get_last_stock_date
-from app.utils.app_state import get_tickers
+from app.utils.app_state import get_tickers, get_fin_db
 from app.tasks.predictions import predict, PredictionInput
+from app.services.data_ingest import save_index_prediction
 
 # update stock data job for scheduler of daily updates
 async def update_financial_data_job(arg:str = "schedule"):
@@ -70,16 +71,26 @@ def run_prediction_on_startup():
 
         # Run prediction
         result = predict(input_data)
-        predicted_scaled = np.array(result['prediction']).reshape(-1, 1)
 
-        # The prediction is for the next close price, scaled. Inverse transform to get real value
-        predicted_real = scaler_y.inverse_transform(predicted_scaled)[0, 0]
+        predicted_scaled = np.array(result['prediction']).reshape(-1, 1)
+        predicted_real = scaler_y.inverse_transform(predicted_scaled)[0, 0] # The prediction is for the next close price, scaled. Inverse transform to get real value
         last_actual_close = closes[-1, 0]
+        input_features_length = len(result['input_features'])
 
         print("📈 Prediction result on startup:")
         print(f"Predicted scaled: {predicted_scaled[0, 0]}")
         print(f"Predicted real close price: {predicted_real}")
         print(f"Last actual close: {last_actual_close}")
-        print(f"Input features length: {len(result['input_features'])}")
+        print(f"Input features length: {input_features_length}")
+        
+        data = {}
+        data['predicted_scaled'] = predicted_scaled[0, 0]
+        data['predicted_real'] = predicted_real
+        data['last_actual_close'] = last_actual_close
+        data['input_features_length'] = input_features_length
+
+        # Insert into index_predictions table
+        save_index_prediction(data)
+        
     except Exception as e:
         print(f"❌ Error during startup prediction: {e}")
