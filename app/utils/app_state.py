@@ -24,6 +24,7 @@ sql_file_select_all_index_price = 'app/db/sql/select_all_index_price.sql'
 sql_file_select_several_stock_price = 'app/db/sql/select_several_stock_price.sql'
 sql_file_select_several_index_price = 'app/db/sql/select_several_index_price.sql'
 sql_file_select_detail_stock_detail = 'app/db/sql/select_detail_stock_detail.sql'
+sql_file_select_category_stock_detail = 'app/db/sql/select_category_stock_detail.sql'
 sql_file_insert_index_predictions_data = 'app/db/sql/insert_index_predictions_data.sql'
 
 # database variables
@@ -77,6 +78,8 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_select_several_index_price
         case 'select_detail_stock_detail':
             return sql_file_select_detail_stock_detail
+        case 'select_category_stock_detail':
+            return sql_file_select_category_stock_detail
         case 'insert_index_predictions_data':
             return sql_file_insert_index_predictions_data
         case _:

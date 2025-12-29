@@ -132,3 +132,19 @@ def get_stock_detail(symbol: str):
     except Exception as e:
         print(f"❌ Error retrieving stock {symbol} detail {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+def get_stock_category():
+    """
+    從 stock_detail 表中查詢所有股票的分類資料。
+    :return: 查詢結果 DataFrame
+    """
+    sql_template = open_sql_file(get_sql_path('select_category_stock_detail'))
+    try:
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db())
+        if df.empty:
+            raise HTTPException(status_code=404, detail="No category data found.")
+        print(f"✅ Retrieved stock category data")
+        return df
+    except Exception as e:
+        print(f"❌ Error retrieving stock category data {e}")
+        raise HTTPException(status_code=500, detail=str(e))
