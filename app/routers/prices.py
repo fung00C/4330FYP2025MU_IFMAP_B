@@ -1,6 +1,7 @@
 # app/routers/prices.py
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
+
 from app.repositories.indexes import get_index_all_price, get_several_index_price
 from app.repositories.stocks import get_stock_all_price, get_several_stock_price
 from app.utils.app_state import ALLOWED_COLUMNS_IN_FINANCIAL
