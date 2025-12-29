@@ -3,6 +3,7 @@ import pandas as pd
 import logging
 import sqlite3
 from typing import List, Optional
+from datetime import datetime, timedelta
 
 from app.services.yahoo_client import download_index, download_stocks
 from app.services.data_clean import clean_index_df, clean_stock_panel
@@ -80,20 +81,17 @@ def store_ticker_symbols(app):
         logger.exception("Unexpected error while setting app.state.tickers: %s", e) # unexpected errors should be visible in logs for troubleshooting
     set_tickers(tickers) # always set into utils cache as the canonical source for non-request code
 
-# Save index perdictions into financial.db
-def save_index_prediction(data: List[any]):
+# Save index predictions into financial.db
+def save_index_prediction(data: List[any], ticker: str):
     try:
-        insert_query = """
-        INSERT INTO index_predictions (predicted_scaled, predicted_real, last_actual_close, input_features_length)
-        VALUES (?, ?, ?, ?);
-        """
         db = get_fin_db()
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_index_predictions_data"))
-        cursor.execute(sql_template, (data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["input_features_length"]))
+        prediction_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S") # Prediction is for the next day's close, so timestamp should be tomorrow's date
+        cursor.execute(sql_template, (prediction_date, data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["input_features_length"]))
         db.commit()
-        print(f"✅ Index prediction saved successfully.")
+        print(f"✅ Index {ticker} prediction saved successfully.")
         return True
     except sqlite3.Error as e:
-        print(f"❌ An error occurred while saving index prediction: {e}")
+        print(f"❌ An error occurred while saving index {ticker} prediction: {e}")
         return False

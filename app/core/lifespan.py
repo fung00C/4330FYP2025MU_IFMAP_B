@@ -7,7 +7,7 @@ from app.core.scheduler import scheduler
 from app.db.connection import create_connection
 from app.utils.app_state import set_fin_db, set_user_db, get_fin_db, get_tickers, get_sql_path
 from app.utils.file import open_sql_file
-from app.tasks.jobs import update_financial_data_job, run_prediction_on_startup
+from app.tasks.jobs import update_financial_data_job, run_index_prediction_on_startup
 from app.tasks.model import load_model
 from app.services.data_ingest import save_stock_detail, save_stock_data, save_index_data, store_ticker_symbols
 from app.repositories.meta import create_table
@@ -21,9 +21,7 @@ async def init_data_async(app: FastAPI):
     #await asyncio.to_thread(store_ticker_symbols, app) 
     #await asyncio.to_thread(save_stock_data, get_tickers())
     #await asyncio.to_thread(save_index_data)
-
-    # After saving index data, perform prediction
-    await asyncio.to_thread(run_prediction_on_startup)
+    await asyncio.to_thread(run_index_prediction_on_startup)
 
 # Lifespan context manager for FastAPI app
 @asynccontextmanager

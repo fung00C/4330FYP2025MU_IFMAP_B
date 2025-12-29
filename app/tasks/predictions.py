@@ -1,10 +1,16 @@
 # app/tasks/predictions.py
 import numpy as np
-
+from sklearn.preprocessing import StandardScaler
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from typing import List
+
 from app.utils.app_state import get_model, get_model_params
+from app.repositories.indexes import get_several_index_price
+
+#  Create an instance of the StandardScalers for input features and output
+scaler_X = StandardScaler()
+scaler_y = StandardScaler()
 
 # The Pydantic model defines the input format (e.g., a list of floating-point numbers for financial features such as stock price and trading volume).
 class PredictionInput(BaseModel):
@@ -35,3 +41,27 @@ def predict(input_data: PredictionInput):
         "prediction": result,
         #"confidence": None  # The regression model lacks confidence.
     }
+
+def standardize_data(closes: np.ndarray, volumes: np.ndarray):
+    # Prepare X, y
+    X = np.hstack([closes, volumes]) # shape (60, 2) ; hstack to horizontally stack arrays
+    y = closes # shape (60, 1)
+
+    # Standardize using StandardScaler
+    X_scaled = scaler_X.fit_transform(X)
+    y_scaled = scaler_y.fit_transform(y)
+
+    # Prepare features: [close1_scaled, volume1_scaled, close2_scaled, volume2_scaled, ..., close60_scaled, volume60_scaled]
+    features = X_scaled.reshape(-1).tolist()
+
+    # Check if enough data
+    if len(features) != 120:
+        print(f"⚠️ Features length {len(features)} != 120, skipping prediction")
+        return
+    
+    return features
+
+def destandardize_data(data: np.ndarray):
+    # The prediction is for the next close price, scaled. Inverse transform to get real value
+    return scaler_y.inverse_transform(data)[0, 0] 
+    
