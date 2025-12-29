@@ -114,4 +114,21 @@ def get_last_stock_date(database: str = "financial.db"):
     except Exception as e:
         print(f"❌ Could not determine last stored date (stock), falling back to default. Error: {e}")
         return "2015-01-01"
-    
+
+def get_stock_detail(symbol: str):
+    """
+    從 stock_detail 表中查詢單一股票的詳細資料。
+    :param symbol: 股票代碼，例如 "AAPL"
+    :return: 查詢結果 DataFrame
+    """
+    sql_template = open_sql_file(get_sql_path('select_detail_stock_detail'))
+    params = (symbol,)
+    try:
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
+        if df.empty:
+            raise HTTPException(status_code=404, detail=f"No detail found for symbol: {symbol}")
+        print(f"✅ Retrieved detail for stock {symbol}")
+        return df
+    except Exception as e:
+        print(f"❌ Error retrieving stock {symbol} detail {e}")
+        raise HTTPException(status_code=500, detail=str(e))

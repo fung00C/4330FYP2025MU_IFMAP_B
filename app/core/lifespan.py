@@ -40,10 +40,10 @@ async def lifespan(app: FastAPI):
         print("⚠️ Warning: One or both DB connections failed.")
 
     # load ML model and set parameters
-    load_model()
+    #load_model()
 
     # initalize data run in background
-    asyncio.create_task(init_data_async(app))
+    #asyncio.create_task(init_data_async(app))
 
     # schedule daily stock data update job at midnight using a cron trigger to run once a day at 00:00.
     #scheduler.add_job(update_financial_data_job, 'cron', hour=0, minute=0)

@@ -7,6 +7,8 @@ from app.routers.tables import router as tables_router
 from app.routers.tickers import router as tickers_router
 from app.routers.prices import router as prices_router
 from app.routers.update import router as update_router
+from app.routers.detail import router as detail_router
+from app.routers.category import router as category_router
 
 app = FastAPI(lifespan=lifespan, title="Server", description="Service the finance app")
 
@@ -16,6 +18,8 @@ app.include_router(tables_router)
 app.include_router(tickers_router)
 app.include_router(prices_router)
 app.include_router(update_router)
+app.include_router(detail_router)
+app.include_router(category_router)
 
 if __name__ == "__main__":
     import uvicorn
