@@ -1,6 +1,8 @@
 # app/routers/stock_category.py
 
+import os
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 
 from app.repositories.stocks import get_stock_category
 
@@ -12,18 +14,14 @@ async def api_get_stock_category():
     Get all stock category data
     """
     try:
-        #raise HTTPException(status_code=404, detail=f"symbols must not be empty")
-        df = get_stock_category()
-        result = df.to_dict(orient="records") # 將 DataFrame 轉為 JSON 格式輸出
-
-        # TODO: make 'result' to the json fromat like: [{sector: {industry: [symbols]}}, ...]
-
-
-        return {"data type": "json", "number of sector": len(), "number of industry": len(),  "data": "new format data"}
+        json_path = os.path.join(os.path.dirname(__file__), '..', '..', 'json', 'stock_category.json')
+        if not os.path.exists(json_path):
+            raise HTTPException(status_code=404, detail="Stock category JSON file not found")
+        return FileResponse(path=json_path, media_type='application/json')
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/index")
 async def api_get_index_category():

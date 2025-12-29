@@ -1,10 +1,13 @@
 # app/services/data_ingest.py
+import json
+import os
 import pandas as pd
 import logging
 import sqlite3
-from typing import List, Optional
+from typing import List
 from datetime import datetime, timedelta
 
+from app.repositories.stocks import get_stock_category
 from app.services.yahoo_client import download_index, download_stocks
 from app.services.data_clean import clean_index_df, clean_stock_panel
 from app.services.data_refresh import refresh_tickers_list
@@ -94,4 +97,40 @@ def save_index_prediction(data: List[any], ticker: str):
         return True
     except sqlite3.Error as e:
         print(f"❌ An error occurred while saving index {ticker} prediction: {e}")
+        return False
+    
+def save_stock_category_json():
+    try:
+        # Fetch stock category data
+        df = get_stock_category()
+        # Group by sector and industry, collect symbols
+        categories = {}
+        for _, row in df.iterrows():
+            sector = row['Sector']
+            industry = row['Industry']
+            symbol = row['Symbol']
+            if sector not in categories:
+                categories[sector] = {}
+            if industry not in categories[sector]:
+                categories[sector][industry] = []
+            categories[sector][industry].append(symbol)
+        # Calculate counts
+        num_sectors = len(categories)
+        num_industries = sum(len(industries) for industries in categories.values())
+        # Convert to new format: {"info": {"num_sectors": ..., "num_industries": ...}, "data": [{sector: {industry: [symbols]}}, ...]}
+        result = {
+            "info": {
+                "num_sectors": num_sectors,
+                "num_industries": num_industries
+            },
+            "data": [{sector: industries} for sector, industries in categories.items()]
+        }
+        # Save to JSON file
+        json_path = os.path.join(os.path.dirname(__file__), '..', '..', 'json', 'stock_category.json')
+        with open(json_path, 'w') as json_file:
+            json.dump(result, json_file, indent=2)
+        print("✅ Stock category JSON file saved successfully.")
+        return True
+    except Exception as e:
+        print(f"❌ An error occurred while saving stock category JSON: {e}")
         return False
