@@ -132,6 +132,7 @@ def get_last_index_date(database: str = "financial.db"):
         print(f"❌ Could not determine last stored date (index), falling back to default. Error: {e}")
         return ""
     
+# read financial.db to get last window_end_date stored in index_predictions table
 def get_last_index_window_end_date(database: str = "financial.db"):
     last_window_end_date = ""
     try:
@@ -145,4 +146,19 @@ def get_last_index_window_end_date(database: str = "financial.db"):
         return last_window_end_date
     except Exception as e:
         print(f"❌ Could not determine last window end date from index_predictions, falling back to default. Error: {e}")
+        return ""
+
+# read financial.db to get any date with offset and any ticker stored in index_price table
+def get_any_index_date(ticker: str, offset: int, database: str = "financial.db"):
+    date = ""
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_any_date_index_price"))
+        cursor.execute(sql_template, (ticker, (offset - 1))) # OFFSET window_size - 1 to get the Nth(window_size) record
+        row = cursor.fetchone()
+        date = row[0] if row else ""
+        print(f"✅ Fetched date with offset {offset} for {ticker} from database '{database}'")
+        return date
+    except Exception as e:
+        print(f"❌ Could not fetch date with offset {offset} for {ticker}, falling back to default. Error: {e}")
         return ""

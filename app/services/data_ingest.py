@@ -91,7 +91,7 @@ def save_index_prediction(data: List[any], ticker: str):
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_index_predictions_data"))
         prediction_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S") # Prediction is for the next day's close, so timestamp should be tomorrow's date
-        cursor.execute(sql_template, (prediction_date, data["window_size"], data["window_end_date"], data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["feature_number"], data["input_features_length"]))
+        cursor.execute(sql_template, (data["ticker"], prediction_date, data["window_size"], data["window_start_date"], data["window_end_date"], data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["feature_number"], data["input_features_length"]))
         db.commit()
         print(f"✅ Index {ticker} prediction saved successfully.")
         return True
@@ -99,6 +99,7 @@ def save_index_prediction(data: List[any], ticker: str):
         print(f"❌ An error occurred while saving index {ticker} prediction: {e}")
         return False
     
+# Save stock category JSON file
 def save_stock_category_json():
     try:
         # Fetch stock category data

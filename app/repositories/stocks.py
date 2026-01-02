@@ -119,6 +119,14 @@ def select_stock_start_date(database: str = "financial.db"):
 def get_last_stock_date(database: str = "financial.db"):
     return
 
+# read financial.db to get last window_end_date stored in stock_predictions table
+def get_last_stock_window_end_date(database: str = "financial.db"):
+    return
+
+# read financial.db to get any date with offset and any ticker stored in stock_price table
+def get_any_stock_date(ticker: str, offset: int, database: str = "financial.db"):
+    return
+
 def get_stock_detail(symbol: str):
     """
     從 stock_detail 表中查詢單一股票的詳細資料。
