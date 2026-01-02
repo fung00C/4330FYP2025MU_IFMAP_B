@@ -90,8 +90,8 @@ def save_index_prediction(data: List[any], ticker: str):
         db = get_fin_db()
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_index_predictions_data"))
-        prediction_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S") # Prediction is for the next day's close, so timestamp should be tomorrow's date
-        cursor.execute(sql_template, (prediction_date, data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["input_features_length"]))
+        prediction_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S") # Prediction is for the next day's close, so timestamp should be tomorrow's date
+        cursor.execute(sql_template, (prediction_date, data["window_size"], data["window_end_date"], data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["feature_number"], data["input_features_length"]))
         db.commit()
         print(f"✅ Index {ticker} prediction saved successfully.")
         return True

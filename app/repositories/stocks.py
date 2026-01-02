@@ -96,8 +96,8 @@ def get_several_stock_price(symbols: List[str], columns: List[str], start_date: 
         print(f"❌ Error retrieving stock {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# read financial.db to get last date stored in stock_price table
-def get_last_stock_date(database: str = "financial.db"):
+# read financial.db to get last date stored in stock_price table and return the next date as start_date
+def select_stock_start_date(database: str = "financial.db"):
     start_date = ""
     try:
         cursor = get_fin_db().cursor()
@@ -114,6 +114,10 @@ def get_last_stock_date(database: str = "financial.db"):
     except Exception as e:
         print(f"❌ Could not determine last stored date (stock), falling back to default. Error: {e}")
         return "2015-01-01"
+
+# read financial.db to get last date stored in stock_price table
+def get_last_stock_date(database: str = "financial.db"):
+    return
 
 def get_stock_detail(symbol: str):
     """

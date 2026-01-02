@@ -96,8 +96,8 @@ def get_several_index_price(symbols: List[str], columns: List[str], start_date: 
         print(f"❌ Error retrieving stock {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# read financial.db to get last date stored in index_price table
-def get_last_index_date(database: str = "financial.db"):
+# read financial.db to get last date stored in index_price table and return the next date as start_date
+def select_index_start_date(database: str = "financial.db"):
     start_date = ""
     try:
         cursor = get_fin_db().cursor()
@@ -107,10 +107,42 @@ def get_last_index_date(database: str = "financial.db"):
         if row and row[0]:
             last_date = datetime.fromisoformat(row[0]) # assume stored dates are in YYYY-MM-DD format
             start_date = (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
+            print(f"✅ Last stored date (index) fetched from database '{database}' and next start date is '{start_date}'")
         else:
             start_date = "2015-01-01" # fallback default start date if no data present
-        print(f"✅ Last stored date (index) fetched from database '{database}'")
+            print(f"✅ No existing data found in index_price table, using default start date '{start_date}'")
         return start_date
     except Exception as e:
         print(f"❌ Could not determine last stored date (index), falling back to default. Error: {e}")
         return "2015-01-01"
+
+# read financial.db to get last date stored in index_price table
+def get_last_index_date(database: str = "financial.db"):
+    last_date = ""
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_last_date_index_price"))
+        cursor.execute(sql_template)
+        row = cursor.fetchone()
+        #last_date = datetime.fromisoformat(row[0])#.strftime("%Y-%m-%d")
+        last_date = row[0]
+        print(f"✅ Last stored date (index) fetched from database '{database}'")
+        return last_date
+    except Exception as e:
+        print(f"❌ Could not determine last stored date (index), falling back to default. Error: {e}")
+        return ""
+    
+def get_last_index_window_end_date(database: str = "financial.db"):
+    last_window_end_date = ""
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_last_date_index_predictions"))
+        cursor.execute(sql_template)
+        row = cursor.fetchone()
+        #last_window_end_date = datetime.fromisoformat(row[0])#.strftime("%Y-%m-%d")
+        last_window_end_date = row[0]
+        print(f"✅ Last window end date from index_predictions fetched from database '{database}'")
+        return last_window_end_date
+    except Exception as e:
+        print(f"❌ Could not determine last window end date from index_predictions, falling back to default. Error: {e}")
+        return ""
