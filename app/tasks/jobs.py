@@ -4,8 +4,8 @@ import numpy as np
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 
-from app.services.data_ingest import save_stock_data, save_index_data
-from app.repositories.indexes import get_any_index_date, select_index_start_date, get_last_index_date, get_several_index_price, get_last_index_window_end_date
+from app.services.data_ingest import save_index_statistics, save_stock_data, save_index_data
+from app.repositories.indexes import get_any_index_date, get_last_index_days200_end_date, select_index_start_date, get_last_index_date, get_several_index_price, get_last_index_window_end_date
 from app.repositories.stocks import select_stock_start_date, get_last_stock_date
 from app.tasks.technical_indicator import days_moving_average
 from app.utils.app_state import get_tickers, get_model_params
@@ -37,6 +37,35 @@ async def update_financial_data_job(arg:str = "schedule"):
         print("⚠️ No tickers found for scheduled update")
         return
 
+# Run index statistics calculation on server startup
+def run_index_statistics_on_startup(ticker: str = "^GSPC"):
+    try:
+        last_index_date = get_last_index_date()
+        last_days200_end_date = get_last_index_days200_end_date()
+
+        # Skip prediction if no new data since last prediction
+        if last_index_date == last_days200_end_date:
+            print(f"⭕️ Skipping index statistics, no new data since last statistics on {last_days200_end_date}.")
+            return
+
+        # Data post-processing
+        days200_start_date = get_any_index_date(ticker, 200)
+        days200_end_date = get_last_index_date()
+        days200_ma = days_moving_average(ticker, 200)
+
+        # Prepare data for insertion
+        data_st = {}
+        data_st['ticker'] = ticker
+        data_st['days200_start_date'] = days200_start_date
+        data_st['days200_end_date'] = days200_end_date
+        data_st['days200_ma'] = days200_ma
+
+        # Insert data into index_statistics table
+        save_index_statistics(data_st, ticker)
+    except Exception as e:
+        print(f"❌ Error during startup index {ticker} statistics: {e}")
+
+# Run index prediction on server startup
 def run_index_prediction_on_startup(ticker: str = "^GSPC"):
     try:
         last_index_date = get_last_index_date()
@@ -68,11 +97,7 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
 
         # Run prediction
         result = predict(input_data)
-        print(f"📈 Index {ticker} Prediction result on startup:")
-        print(f"Predicted scaled: {predicted_scaled[0, 0]}")
-        print(f"Predicted real close price: {predicted_real}")
-        print(f"Last actual close: {last_actual_close}")
-
+        
         # Data post-processing
         window_start_date = get_any_index_date(ticker, window_size)
         window_end_date = last_index_date
@@ -96,20 +121,10 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
 
         # Insert data into index_predictions table
         save_index_predictions(data_pd, ticker)
-
-        # Data post-processing
-        days200_start_date = get_any_index_date(ticker, 200)
-        days200_end_date = get_last_index_date()
-        days200_ma = days_moving_average(ticker, 200)
-
-        # Prepare data for insertion
-        data_st = {}
-        data_st['ticker'] = ticker
-        data_st['days200_start_date'] = days200_start_date
-        data_st['days200_end_date'] = days200_end_date
-        data_st['days200_ma'] = days200_ma
-
-        # Insert data into index_statistics table
-        save_index_statistics(data_st, ticker)
+        
+        print(f"📈 Index {ticker} Prediction result on startup:")
+        print(f"Predicted scaled: {predicted_scaled[0, 0]}")
+        print(f"Predicted real close price: {predicted_real}")
+        print(f"Last actual close: {last_actual_close}")
     except Exception as e:
         print(f"❌ Error during startup index {ticker} prediction: {e}")

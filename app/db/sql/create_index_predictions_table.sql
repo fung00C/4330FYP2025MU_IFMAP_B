@@ -11,5 +11,6 @@ CREATE TABLE IF NOT EXISTS index_predictions (
     predicted_real REAL NOT NULL,
     last_actual_close REAL NOT NULL,
     feature_number INTEGER NOT NULL,
-    input_features_length INTEGER NOT NULL
+    input_features_length INTEGER NOT NULL, 
+    UNIQUE(ticker, window_start_date, window_end_date)
 );

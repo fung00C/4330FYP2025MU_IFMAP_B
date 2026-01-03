@@ -90,13 +90,28 @@ def save_index_predictions(data: List[any], ticker: str):
         db = get_fin_db()
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_index_predictions_data"))
-        prediction_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S") # Prediction is for the next day's close, so timestamp should be tomorrow's date
+        prediction_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cursor.execute(sql_template, (data["ticker"], prediction_date, data["window_size"], data["window_start_date"], data["window_end_date"], data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["feature_number"], data["input_features_length"]))
         db.commit()
-        print(f"✅ Index {ticker} prediction saved successfully.")
+        print(f"✅ Index {ticker} predictions saved successfully.")
         return True
     except sqlite3.Error as e:
-        print(f"❌ An error occurred while saving index {ticker} prediction: {e}")
+        print(f"❌ An error occurred while saving index {ticker} predictions: {e}")
+        return False
+
+# Save index statistics into financial.db
+def save_index_statistics(data: List[any], ticker: str):
+    try:
+        db = get_fin_db()
+        cursor = db.cursor()
+        sql_template = open_sql_file(get_sql_path("insert_index_statistics_data"))
+        statistics_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute(sql_template, (data["ticker"], statistics_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
+        db.commit()
+        print(f"✅ Index {ticker} statistics saved successfully.")
+        return True
+    except sqlite3.Error as e:
+        print(f"❌ An error occurred while saving index {ticker} statistics: {e}")
         return False
     
 # Save stock category JSON file

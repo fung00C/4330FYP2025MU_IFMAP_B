@@ -124,30 +124,13 @@ def get_last_index_date(database: str = "financial.db"):
         sql_template = open_sql_file(get_sql_path("select_last_date_index_price"))
         cursor.execute(sql_template)
         row = cursor.fetchone()
-        #last_date = datetime.fromisoformat(row[0])#.strftime("%Y-%m-%d")
         last_date = row[0]
         print(f"✅ Last stored date (index) fetched from database '{database}'")
         return last_date
     except Exception as e:
-        print(f"❌ Could not determine last stored date (index), falling back to default. Error: {e}")
+        print(f"❌ Could not determine last stored date (index), falling back to empty. Error: {e}")
         return ""
     
-# read financial.db to get last window_end_date stored in index_predictions table
-def get_last_index_window_end_date(database: str = "financial.db"):
-    last_window_end_date = ""
-    try:
-        cursor = get_fin_db().cursor()
-        sql_template = open_sql_file(get_sql_path("select_last_date_index_predictions"))
-        cursor.execute(sql_template)
-        row = cursor.fetchone()
-        #last_window_end_date = datetime.fromisoformat(row[0])#.strftime("%Y-%m-%d")
-        last_window_end_date = row[0]
-        print(f"✅ Last window end date from index_predictions fetched from database '{database}'")
-        return last_window_end_date
-    except Exception as e:
-        print(f"❌ Could not determine last window end date from index_predictions, falling back to default. Error: {e}")
-        return ""
-
 # read financial.db to get any date with offset and any ticker stored in index_price table
 def get_any_index_date(ticker: str, offset: int, database: str = "financial.db"):
     date = ""
@@ -160,23 +143,59 @@ def get_any_index_date(ticker: str, offset: int, database: str = "financial.db")
         print(f"✅ Fetched date with offset {offset} for {ticker} from database '{database}'")
         return date
     except Exception as e:
-        print(f"❌ Could not fetch date with offset {offset} for {ticker}, falling back to default. Error: {e}")
+        print(f"❌ Could not fetch date with offset {offset} for {ticker}, falling back to empty. Error: {e}")
         return ""
-    
-# read financial.db to get range of close price stored in index_price table
-def get_range_index_close_price(ticker: str, limit: int):
+
+# read financial.db to get last window_end_date stored in index_predictions table
+def get_last_index_window_end_date(database: str = "financial.db"):
+    last_window_end_date = ""
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_last_wedate_index_predictions"))
+        cursor.execute(sql_template)
+        row = cursor.fetchone()
+        last_window_end_date = row[0]
+        print(f"✅ Last window end date from index_predictions fetched from database '{database}'")
+        return last_window_end_date
+    except Exception as e:
+        print(f"❌ Could not determine last window end date from index_predictions, falling back to empty. Error: {e}")
+        return ""
+
+# read financial.db to get last days200_end_date stored in index_statistics table
+def get_last_index_days200_end_date(database: str = "financial.db"):
+    last_days200_end_date = ""
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_last_d200edate_index_statistics"))
+        cursor.execute(sql_template)
+        row = cursor.fetchone()
+        last_days200_end_date = row[0]
+        print(f"✅ Last days200 end date from index_statistics fetched from database '{database}'")
+        return last_days200_end_date
+    except Exception as e:
+        print(f"❌ Could not determine last days200 end date from index_statistics, falling back to empty. Error: {e}")
+        return ""
+
+# read financial.db to get range of close prices stored in index_price table for a ticker 
+def get_range_index_close_price(ticker: str, days: int):
     """
-    從 index_price 表中查詢指定指數的收盤價資料，限制返回筆數。
+    從 index_price 表中查詢指定 ticker 最近 days 天的 close 價格。
     :param ticker: 指數代碼，例如 "^GSPC"
-    :param limit: 返回的最大筆數
-    :return: 查詢結果 DataFrame
+    :param days: 天數
+    :return: 包含 close 欄位的 DataFrame
     """
-    sql_template = open_sql_file(get_sql_path("select_range_index_close_price"))
-    params = (ticker, limit)
+    sql_template = open_sql_file(get_sql_path('select_several_index_price'))
+    select_cols = ", ".join(FIXED_COLUMNS_IN_FINANCIAL + ['close'])
+    sql_template = sql_template.replace("/*SELECT_COLUMNS*/", select_cols)
+    sql_template = sql_template.replace("/*SYMBOL_IN_CLAUSE*/", "AND symbol = ?")
+    sql_template = sql_template.replace("/*DATE_START_COND*/", "")
+    sql_template = sql_template.replace("/*DATE_END_COND*/", "")
+    sql_template = sql_template.replace("/*DATA_LIMIT*/", "LIMIT ?")
+    params = [ticker, days]
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
         if df.empty:
-            raise HTTPException(status_code=404, detail=f"No close price data found for ticker: {ticker}")
+            raise HTTPException(status_code=404, detail=f"No close price data found for {ticker} in the last {days} days.")
         print(f"✅ Retrieved {len(df)} rows of close prices for {ticker}")
         return df
     except Exception as e:
