@@ -9,6 +9,7 @@ from app.routers.prices import router as prices_router
 from app.routers.update import router as update_router
 from app.routers.detail import router as detail_router
 from app.routers.category import router as category_router
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(lifespan=lifespan, title="Server", description="Service the finance app")
 
@@ -20,6 +21,15 @@ app.include_router(prices_router)
 app.include_router(update_router)
 app.include_router(detail_router)
 app.include_router(category_router)
+
+# Configure a CORS intermediary to allow requests from the React frontend.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://192.168.50.240:3000"],  # Adjust according to your React port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 if __name__ == "__main__":
     import uvicorn

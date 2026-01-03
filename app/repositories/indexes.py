@@ -162,3 +162,41 @@ def get_any_index_date(ticker: str, offset: int, database: str = "financial.db")
     except Exception as e:
         print(f"❌ Could not fetch date with offset {offset} for {ticker}, falling back to default. Error: {e}")
         return ""
+    
+# read financial.db to get range of close price stored in index_price table
+def get_range_index_close_price(ticker: str, limit: int):
+    """
+    從 index_price 表中查詢指定指數的收盤價資料，限制返回筆數。
+    :param ticker: 指數代碼，例如 "^GSPC"
+    :param limit: 返回的最大筆數
+    :return: 查詢結果 DataFrame
+    """
+    sql_template = open_sql_file(get_sql_path("select_range_index_close_price"))
+    params = (ticker, limit)
+    try:
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
+        if df.empty:
+            raise HTTPException(status_code=404, detail=f"No close price data found for ticker: {ticker}")
+        print(f"✅ Retrieved {len(df)} rows of close prices for {ticker}")
+        return df
+    except Exception as e:
+        print(f"❌ Error retrieving range of close prices for {ticker}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+def get_index_detail(symbol: str):
+    """
+    從 index_detail 表中查詢單一股票的詳細資料。
+    :param symbol: 股票代碼，例如 "^GSPC"
+    :return: 查詢結果 DataFrame
+    """
+    pass
+
+def get_index_category():
+    """
+    從 index_detail 表中查詢所有股票的分類資料。
+    :return: 查詢結果 DataFrame
+    """
+    pass
+
+def get_predicted_data_index():
+    pass

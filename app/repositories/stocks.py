@@ -117,15 +117,25 @@ def select_stock_start_date(database: str = "financial.db"):
 
 # read financial.db to get last date stored in stock_price table
 def get_last_stock_date(database: str = "financial.db"):
-    return
+    pass
 
 # read financial.db to get last window_end_date stored in stock_predictions table
 def get_last_stock_window_end_date(database: str = "financial.db"):
-    return
+    pass
 
 # read financial.db to get any date with offset and any ticker stored in stock_price table
 def get_any_stock_date(ticker: str, offset: int, database: str = "financial.db"):
-    return
+    pass
+
+# read financial.db to get range of close price stored in stock_price table
+def get_range_stock_close_price(ticker: str, limit: int):
+    """
+    從 stock_price 表中查詢指定指數的收盤價資料，限制返回筆數。
+    :param ticker: 指數代碼，例如 "AAPL"
+    :param limit: 返回的最大筆數
+    :return: 查詢結果 DataFrame
+    """
+    pass
 
 def get_stock_detail(symbol: str):
     """

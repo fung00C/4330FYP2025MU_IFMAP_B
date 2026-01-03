@@ -85,7 +85,7 @@ def store_ticker_symbols(app):
     set_tickers(tickers) # always set into utils cache as the canonical source for non-request code
 
 # Save index predictions into financial.db
-def save_index_prediction(data: List[any], ticker: str):
+def save_index_predictions(data: List[any], ticker: str):
     try:
         db = get_fin_db()
         cursor = db.cursor()
