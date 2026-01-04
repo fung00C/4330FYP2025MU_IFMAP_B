@@ -7,7 +7,7 @@ from app.utils.app_state import set_model, set_model_params
 def load_model():
     # Load the Keras .h5 model
     try:
-        model = tf.keras.models.load_model('../backend/models/pre_sp500_model2.h5') # 4330FYP2025MU_IFMAP_B
+        model = tf.keras.models.load_model('../4330FYP2025MU_IFMAP_B/models/pre_sp500_model2.h5')
         print("✅ ML model loaded successfully.")
         set_model(model)
     except Exception as e:
