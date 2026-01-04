@@ -1,21 +1,23 @@
 # app/tasks/jobs.py
 import asyncio
+from typing import List
 import numpy as np
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 
-from app.services.data_ingest import save_stock_data, save_index_data
-from app.repositories.indexes import get_last_index_date, get_several_index_price
-from app.repositories.stocks import get_last_stock_date
-from app.utils.app_state import get_tickers
+from app.services.data_ingest import save_index_statistics, save_stock_data, save_index_data
+from app.repositories.indexes import get_any_index_date, get_last_index_days200_end_date, get_serveral_index_statistics, select_index_start_date, get_last_index_date, get_several_index_price, get_last_index_window_end_date
+from app.repositories.stocks import select_stock_start_date, get_last_stock_date
+from app.tasks.technical_indicator import days_moving_average
+from app.utils.app_state import get_tickers, get_model_params
 from app.tasks.predictions import destandardize_data, predict, standardize_data, PredictionInput
-from app.services.data_ingest import save_index_prediction
+from app.services.data_ingest import save_index_predictions
 
 # update stock data job for scheduler of daily updates
 async def update_financial_data_job(arg:str = "schedule"):
     # set start_date to next day
-    index_start_date = get_last_index_date()
-    stock_start_date = get_last_stock_date()
+    index_start_date = select_index_start_date()
+    stock_start_date = select_stock_start_date()
     # set end_date to today
     end_date = datetime.now().strftime("%Y-%m-%d")
     match arg:
@@ -36,14 +38,53 @@ async def update_financial_data_job(arg:str = "schedule"):
         print("⚠️ No tickers found for scheduled update")
         return
 
+# Run index statistics calculation on server startup
+def run_index_statistics_on_startup(ticker: str = "^GSPC"):
+    try:
+        last_index_date = get_last_index_date()
+        last_days200_end_date = get_last_index_days200_end_date()
+
+        # Skip prediction if no new data since last prediction
+        if last_index_date == last_days200_end_date:
+            print(f"⭕️ Skipping index statistics, no new data since last statistics on {last_days200_end_date}.")
+            return
+
+        # Data post-processing
+        days200_start_date = get_any_index_date(ticker, 200)
+        days200_end_date = get_last_index_date()
+        days200_ma = days_moving_average(ticker, 200)
+
+        # Prepare data for insertion
+        data = {}
+        data['ticker'] = ticker
+        data['days200_start_date'] = days200_start_date
+        data['days200_end_date'] = days200_end_date
+        data['days200_ma'] = days200_ma
+
+        # Insert data into index_statistics table
+        save_index_statistics(data, ticker)
+    except Exception as e:
+        print(f"❌ Error during startup index {ticker} statistics: {e}")
+
+# Run index prediction on server startup
 def run_index_prediction_on_startup(ticker: str = "^GSPC"):
     try:
-        # Get latest 60 days of close and volume for ticker
-        df = get_several_index_price([ticker], ['close', 'volume'], limit=60)
+        last_index_date = get_last_index_date()
+        last_window_end_date = get_last_index_window_end_date()
+        window_size = get_model_params("timesteps")
+        last_days200_ma = get_serveral_index_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
+
+        # Skip prediction if no new data since last prediction
+        if last_index_date == last_window_end_date:
+            print(f"⭕️ Skipping index prediction, no new data since last prediction on {last_window_end_date}.")
+            return
+
+        # Get latest days(window size) of close and volume for ticker
+        df = get_several_index_price([ticker], ['close', 'volume'], limit=window_size)
 
         # Check data sufficiency
-        if df.empty or len(df) < 60:
-            print(f"⚠️ Not enough index data {ticker} for prediction (need 60 days)")
+        if df.empty or len(df) < window_size:
+            print(f"⚠️ Not enough index data {ticker} for prediction (need {window_size} days)")
             return
         
         # Prepare standardized features
@@ -58,25 +99,37 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
 
         # Run prediction
         result = predict(input_data)
-
+        
         # Data post-processing
+        window_start_date = get_any_index_date(ticker, window_size)
+        window_end_date = last_index_date
         predicted_scaled = np.array(result['prediction']).reshape(-1, 1)
         predicted_real = destandardize_data(predicted_scaled) # Destandardize predicted value
         last_actual_close = closes[-1, 0]
+        recommendation = "BUY" if predicted_real >= last_days200_ma['days200_ma'][0] else "SELL"
+        feature_number = get_model_params("num_features")
         input_features_length = len(result['input_features'])
+        
+        # Prepare data for insertion
         data = {}
+        data['ticker'] = ticker
+        data['window_size'] = window_size
+        data['window_start_date'] = window_start_date
+        data['window_end_date'] = window_end_date
         data['predicted_scaled'] = predicted_scaled[0, 0]
         data['predicted_real'] = predicted_real
         data['last_actual_close'] = last_actual_close
+        data['recommendation'] = recommendation
+        data['feature_number'] = feature_number
         data['input_features_length'] = input_features_length
 
+        # Insert data into index_predictions table
+        save_index_predictions(data, ticker)
+        
         print(f"📈 Index {ticker} Prediction result on startup:")
         print(f"Predicted scaled: {predicted_scaled[0, 0]}")
         print(f"Predicted real close price: {predicted_real}")
         print(f"Last actual close: {last_actual_close}")
-        print(f"Input features length: {input_features_length}")
-
-        # Insert data into index_predictions table
-        save_index_prediction(data, ticker)
+        print(f"Recommendation: {recommendation}")
     except Exception as e:
         print(f"❌ Error during startup index {ticker} prediction: {e}")
