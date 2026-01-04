@@ -23,10 +23,9 @@ async def api_get_stock_category():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/index")
+"""@router.get("/index")
 async def api_get_index_category():
-    """
+    ""
     Get all index category data
-    """
-
-    return 
+    ""
+    pass"""

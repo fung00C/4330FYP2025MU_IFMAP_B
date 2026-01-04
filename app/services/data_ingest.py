@@ -5,7 +5,7 @@ import pandas as pd
 import logging
 import sqlite3
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from app.repositories.stocks import get_stock_category
 from app.services.yahoo_client import download_index, download_stocks
@@ -91,7 +91,7 @@ def save_index_predictions(data: List[any], ticker: str):
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_index_predictions_data"))
         prediction_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute(sql_template, (data["ticker"], prediction_date, data["window_size"], data["window_start_date"], data["window_end_date"], data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["feature_number"], data["input_features_length"]))
+        cursor.execute(sql_template, (data["ticker"], prediction_date, data["window_size"], data["window_start_date"], data["window_end_date"], data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["recommendation"], data["feature_number"], data["input_features_length"]))
         db.commit()
         print(f"✅ Index {ticker} predictions saved successfully.")
         return True

@@ -47,11 +47,11 @@ def get_index_all_price(symbols: List[str], start_date: Optional[str] = None, en
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params) # 用 pd.read_sql_query(sql, conn, params=params) 直接回傳 DataFrame
         if df.empty:
-            raise HTTPException(status_code=404, detail="No data found for requested symbols.")
-        print(f"✅ Retrieved {len(df)} rows for {symbols}")
+            raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(index price).")
+        print(f"✅ Retrieved {len(df)} rows for {symbols} in table(index price)")
         return df
     except Exception as e:
-        print(f"❌ Error retrieving stock {e}")
+        print(f"❌ Error retrieving table(index price) for {symbols}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # read financial.db to get several column date stored in index_price table
@@ -89,11 +89,99 @@ def get_several_index_price(symbols: List[str], columns: List[str], start_date: 
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)  # 只綁值，不綁欄位名
         if df.empty:
-            raise HTTPException(status_code=404, detail="No data found for requested symbols.")
-        print(f"✅ Retrieved {len(df)} rows of prices({columns}) for {symbols}")
+            raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(index price).")
+        print(f"✅ Retrieved {len(df)} rows of prices({columns}) for {symbols} in table(index price)")
         return df
     except Exception as e:
-        print(f"❌ Error retrieving stock {e}")
+        print(f"❌ Error retrieving table(index price) for {symbols}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# read financial.db to get several column date stored in index_statistics table
+def get_serveral_index_statistics(symbols: List[str], columns: List[str], start_date: Optional[str] = None, end_date: Optional[str] = None, limit: Optional[int] = None):
+    """
+    從 index_statistics 表中查詢指定 symbol 特定範圍的任意欄數據。
+    :param symbols: 指數代碼列表，例如 ["^GSPC"]
+    :param columns: 數據欄列表，例如 ["days200_ma"]
+    :param start_date: 起始日期 (YYYY-MM-DD)
+    :param end_date: 結束日期 (YYYY-MM-DD)
+    :param limit: 最大返回筆數
+    :return: 查詢結果 DataFrame
+    """
+    sql_template = open_sql_file(get_sql_path('select_several_index_statistics'))
+    select_cols = ", ".join(columns)
+    sql_template = sql_template.replace("/*SELECT_COLUMNS*/", select_cols)
+    placeholders = ",".join(["?"] * len(symbols))
+    symbol_clause = f"AND symbol IN ({placeholders})"
+    sql_template = sql_template.replace("/*SYMBOL_IN_CLAUSE*/", f"\n  {symbol_clause}")
+    params: List[object] = []
+    params.extend(symbols)
+    if start_date:
+        sql_template = sql_template.replace("/*TIMESTAMP_START_COND*/", "AND date >= ?")
+        params.append(start_date)
+    else:
+        sql_template = sql_template.replace("/*TIMESTAMP_START_COND*/", "")
+    if end_date:
+        sql_template = sql_template.replace("/*TIMESTAMP_END_COND*/", "AND date <= ?")
+        params.append(end_date)
+    else:
+        sql_template = sql_template.replace("/*TIMESTAMP_END_COND*/", "")
+    if limit:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "LIMIT ?")
+        params.append(limit)
+    else:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "")
+    try:
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
+        if df.empty:
+            raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(index statistics).")
+        print(f"✅ Retrieved {len(df)} rows for {symbols} in table(index statistics)")
+        return df
+    except Exception as e:
+        print(f"❌ Error retrieving table(index statistics) for {symbols}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# read financial.db to get several column date stored in index_predictions table
+def get_serveral_index_predictions(symbols: List[str], columns: List[str], start_date: Optional[str] = None, end_date: Optional[str] = None, limit: Optional[int] = None):
+    """
+    從 index_predictions 表中查詢指定 symbol 特定範圍的任意欄數據。
+    :param symbols: 指數代碼列表，例如 ["AAPL"]
+    :param columns: 數據欄列表，例如 ["predicted_real"]
+    :param start_date: 起始日期 (YYYY-MM-DD)
+    :param end_date: 結束日期 (YYYY-MM-DD)
+    :param limit: 最大返回筆數
+    :return: 查詢結果 DataFrame
+    """
+    sql_template = open_sql_file(get_sql_path('select_several_index_predictions'))
+    select_cols = ", ".join(columns)
+    sql_template = sql_template.replace("/*SELECT_COLUMNS*/", select_cols)
+    placeholders = ",".join(["?"] * len(symbols))
+    symbol_clause = f"AND symbol IN ({placeholders})"
+    sql_template = sql_template.replace("/*SYMBOL_IN_CLAUSE*/", f"\n  {symbol_clause}")
+    params: List[object] = []
+    params.extend(symbols)
+    if start_date:
+        sql_template = sql_template.replace("/*TIMESTAMP_START_COND*/", "AND date >= ?")
+        params.append(start_date)
+    else:
+        sql_template = sql_template.replace("/*TIMESTAMP_START_COND*/", "")
+    if end_date:
+        sql_template = sql_template.replace("/*TIMESTAMP_END_COND*/", "AND date <= ?")
+        params.append(end_date)
+    else:
+        sql_template = sql_template.replace("/*TIMESTAMP_END_COND*/", "")
+    if limit:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "LIMIT ?")
+        params.append(limit)
+    else:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "")
+    try:
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
+        if df.empty:
+            raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(index predictions).")
+        print(f"✅ Retrieved {len(df)} rows for {symbols} in table(index predictions)")
+        return df
+    except Exception as e:
+        print(f"❌ Error retrieving table(index predictions) for {symbols}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # read financial.db to get last date stored in index_price table and return the next date as start_date

@@ -1,11 +1,12 @@
 # app/tasks/jobs.py
 import asyncio
+from typing import List
 import numpy as np
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 
 from app.services.data_ingest import save_index_statistics, save_stock_data, save_index_data
-from app.repositories.indexes import get_any_index_date, get_last_index_days200_end_date, select_index_start_date, get_last_index_date, get_several_index_price, get_last_index_window_end_date
+from app.repositories.indexes import get_any_index_date, get_last_index_days200_end_date, get_serveral_index_statistics, select_index_start_date, get_last_index_date, get_several_index_price, get_last_index_window_end_date
 from app.repositories.stocks import select_stock_start_date, get_last_stock_date
 from app.tasks.technical_indicator import days_moving_average
 from app.utils.app_state import get_tickers, get_model_params
@@ -54,14 +55,14 @@ def run_index_statistics_on_startup(ticker: str = "^GSPC"):
         days200_ma = days_moving_average(ticker, 200)
 
         # Prepare data for insertion
-        data_st = {}
-        data_st['ticker'] = ticker
-        data_st['days200_start_date'] = days200_start_date
-        data_st['days200_end_date'] = days200_end_date
-        data_st['days200_ma'] = days200_ma
+        data = {}
+        data['ticker'] = ticker
+        data['days200_start_date'] = days200_start_date
+        data['days200_end_date'] = days200_end_date
+        data['days200_ma'] = days200_ma
 
         # Insert data into index_statistics table
-        save_index_statistics(data_st, ticker)
+        save_index_statistics(data, ticker)
     except Exception as e:
         print(f"❌ Error during startup index {ticker} statistics: {e}")
 
@@ -71,6 +72,7 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         last_index_date = get_last_index_date()
         last_window_end_date = get_last_index_window_end_date()
         window_size = get_model_params("timesteps")
+        last_days200_ma = get_serveral_index_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
 
         # Skip prediction if no new data since last prediction
         if last_index_date == last_window_end_date:
@@ -104,27 +106,30 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         predicted_scaled = np.array(result['prediction']).reshape(-1, 1)
         predicted_real = destandardize_data(predicted_scaled) # Destandardize predicted value
         last_actual_close = closes[-1, 0]
+        recommendation = "BUY" if predicted_real >= last_days200_ma['days200_ma'][0] else "SELL"
         feature_number = get_model_params("num_features")
         input_features_length = len(result['input_features'])
         
         # Prepare data for insertion
-        data_pd = {}
-        data_pd['ticker'] = ticker
-        data_pd['window_size'] = window_size
-        data_pd['window_start_date'] = window_start_date
-        data_pd['window_end_date'] = window_end_date
-        data_pd['predicted_scaled'] = predicted_scaled[0, 0]
-        data_pd['predicted_real'] = predicted_real
-        data_pd['last_actual_close'] = last_actual_close
-        data_pd['feature_number'] = feature_number
-        data_pd['input_features_length'] = input_features_length
+        data = {}
+        data['ticker'] = ticker
+        data['window_size'] = window_size
+        data['window_start_date'] = window_start_date
+        data['window_end_date'] = window_end_date
+        data['predicted_scaled'] = predicted_scaled[0, 0]
+        data['predicted_real'] = predicted_real
+        data['last_actual_close'] = last_actual_close
+        data['recommendation'] = recommendation
+        data['feature_number'] = feature_number
+        data['input_features_length'] = input_features_length
 
         # Insert data into index_predictions table
-        save_index_predictions(data_pd, ticker)
+        save_index_predictions(data, ticker)
         
         print(f"📈 Index {ticker} Prediction result on startup:")
         print(f"Predicted scaled: {predicted_scaled[0, 0]}")
         print(f"Predicted real close price: {predicted_real}")
         print(f"Last actual close: {last_actual_close}")
+        print(f"Recommendation: {recommendation}")
     except Exception as e:
         print(f"❌ Error during startup index {ticker} prediction: {e}")

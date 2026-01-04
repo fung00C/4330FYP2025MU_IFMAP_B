@@ -47,11 +47,11 @@ def get_stock_all_price(symbols: List[str], start_date: Optional[str] = None, en
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params) # 用 pd.read_sql_query(sql, conn, params=params) 直接回傳 DataFrame
         if df.empty:
-            raise HTTPException(status_code=404, detail="No data found for requested symbols.")
-        print(f"✅ Retrieved {len(df)} rows for {symbols}")
+            raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock price).")
+        print(f"✅ Retrieved {len(df)} rows for {symbols} in table(stock price)")
         return df
     except Exception as e:
-        print(f"❌ Error retrieving stock {e}")
+        print(f"❌ Error retrieving table(stock price) for {symbols}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # read financial.db to get several column date stored in stock_price table
@@ -89,11 +89,11 @@ def get_several_stock_price(symbols: List[str], columns: List[str], start_date: 
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)  # 只綁值，不綁欄位名
         if df.empty:
-            raise HTTPException(status_code=404, detail="No data found for requested symbols.")
-        print(f"✅ Retrieved {len(df)} rows of prices({columns}) for {symbols}")
+            raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock price).")
+        print(f"✅ Retrieved {len(df)} rows of prices({columns}) for {symbols} in table(stock price)")
         return df
     except Exception as e:
-        print(f"❌ Error retrieving stock {e}")
+        print(f"❌ Error retrieving in table(stock price) for {symbols}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # read financial.db to get last date stored in stock_price table and return the next date as start_date
@@ -119,12 +119,16 @@ def select_stock_start_date(database: str = "financial.db"):
 def get_last_stock_date(database: str = "financial.db"):
     pass
 
+# read financial.db to get any date with offset and any ticker stored in stock_price table
+def get_any_stock_date(ticker: str, offset: int, database: str = "financial.db"):
+    pass
+
 # read financial.db to get last window_end_date stored in stock_predictions table
 def get_last_stock_window_end_date(database: str = "financial.db"):
     pass
 
-# read financial.db to get any date with offset and any ticker stored in stock_price table
-def get_any_stock_date(ticker: str, offset: int, database: str = "financial.db"):
+# read financial.db to get last days200_end_date stored in stock_statistics table
+def get_last_stock_days200_end_date(database: str = "financial.db"):
     pass
 
 # read financial.db to get range of close price stored in stock_price table
