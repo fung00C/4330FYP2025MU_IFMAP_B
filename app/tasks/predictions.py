@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 from typing import List
 
 from app.utils.app_state import get_model, get_model_params
-from app.repositories.indexes import get_several_index_price
 
 #  Create an instance of the StandardScalers for input features and output
 scaler_X = StandardScaler()
@@ -42,6 +41,7 @@ def predict(input_data: PredictionInput):
         #"confidence": None  # The regression model lacks confidence.
     }
 
+# Standardize input data
 def standardize_data(closes: np.ndarray, volumes: np.ndarray):
     # Prepare X, y
     X = np.hstack([closes, volumes]) # shape (60, 2) ; hstack to horizontally stack arrays
@@ -61,7 +61,7 @@ def standardize_data(closes: np.ndarray, volumes: np.ndarray):
     
     return features
 
+# Destandardize predicted data
 def destandardize_data(data: np.ndarray):
     # The prediction is for the next close price, scaled. Inverse transform to get real value
     return scaler_y.inverse_transform(data)[0, 0] 
-    

@@ -12,20 +12,29 @@ FIXED_COLUMNS_IN_FINANCIAL = ["symbol","date"]
 sql_file_create_index_price_table = 'app/db/sql/create_index_price_table.sql'
 sql_file_create_stock_price_table = 'app/db/sql/create_stock_price_table.sql'
 sql_file_create_index_predictions_table = 'app/db/sql/create_index_predictions_table.sql'
+sql_file_create_index_statistics_table = 'app/db/sql/create_index_statistics_table.sql'
 sql_file_drop_index_price_table = 'app/db/sql/drop_index_price_table.sql'
 sql_file_drop_stock_price_table = 'app/db/sql/drop_stock_price_table.sql'
 sql_file_drop_index_predictions_table = 'app/db/sql/drop_index_predictions_table.sql'
+sql_file_drop_index_statistics_table = 'app/db/sql/drop_index_statistics_table.sql'
 sql_file_select_symbol_stock_detail = 'app/db/sql/select_symbol_stock_detail.sql'
 sql_file_select_table_name_financial = 'app/db/sql/select_table_name_financial.sql'
-sql_file_select_last_date_stock_price = 'app/db/sql/select_last_date_stock_price.sql'
 sql_file_select_last_date_index_price = 'app/db/sql/select_last_date_index_price.sql'
+sql_file_select_last_wedate_index_predictions = 'app/db/sql/select_last_wedate_index_predictions.sql'
+sql_file_select_last_d200edate_index_statistics = 'app/db/sql/select_last_d200edate_index_statistics.sql'
+sql_file_select_any_date_index_price = 'app/db/sql/select_any_date_index_price.sql'
+sql_file_select_last_date_stock_price = 'app/db/sql/select_last_date_stock_price.sql'
+sql_file_select_last_date_stock_predictions = 'app/db/sql/select_last_date_stock_predictions.sql'
 sql_file_select_all_stock_price = 'app/db/sql/select_all_stock_price.sql'
 sql_file_select_all_index_price = 'app/db/sql/select_all_index_price.sql'
 sql_file_select_several_stock_price = 'app/db/sql/select_several_stock_price.sql'
 sql_file_select_several_index_price = 'app/db/sql/select_several_index_price.sql'
+sql_file_select_several_index_statistics = 'app/db/sql/select_several_index_statistics.sql'
+sql_file_select_several_index_predictions = 'app/db/sql/select_several_index_predictions.sql'
 sql_file_select_detail_stock_detail = 'app/db/sql/select_detail_stock_detail.sql'
 sql_file_select_category_stock_detail = 'app/db/sql/select_category_stock_detail.sql'
 sql_file_insert_index_predictions_data = 'app/db/sql/insert_index_predictions_data.sql'
+sql_file_insert_index_statistics_data = 'app/db/sql/insert_index_statistics_data.sql'
 
 # database variables
 _fin_db: Optional[sqlite3.Connection] = None
@@ -54,20 +63,32 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_create_stock_price_table
         case 'create_index_predictions_table':
             return sql_file_create_index_predictions_table
+        case 'create_index_statistics_table':
+            return sql_file_create_index_statistics_table
         case 'drop_index_price_table':
             return sql_file_drop_index_price_table
         case 'drop_stock_price_table':
             return sql_file_drop_stock_price_table
         case 'drop_index_predictions_table':
             return sql_file_drop_index_predictions_table
+        case 'drop_index_statistics_table':
+            return sql_file_drop_index_statistics_table
         case 'select_symbol_stock_detail':
             return sql_file_select_symbol_stock_detail
         case 'select_table_name_financial':
             return sql_file_select_table_name_financial
-        case 'select_last_date_stock_price':
-            return sql_file_select_last_date_stock_price
         case 'select_last_date_index_price':
             return sql_file_select_last_date_index_price
+        case 'select_last_wedate_index_predictions':
+            return sql_file_select_last_wedate_index_predictions
+        case 'select_last_d200edate_index_statistics':
+            return sql_file_select_last_d200edate_index_statistics
+        case 'select_any_date_index_price':
+            return sql_file_select_any_date_index_price
+        case 'select_last_date_stock_price':
+            return sql_file_select_last_date_stock_price
+        case 'select_last_date_stock_predictions':
+            return sql_file_select_last_date_stock_predictions
         case 'select_all_stock_price':
             return sql_file_select_all_stock_price
         case 'select_all_index_price':
@@ -76,12 +97,18 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_select_several_stock_price
         case 'select_several_index_price':
             return sql_file_select_several_index_price
+        case 'select_several_index_statistics':
+            return sql_file_select_several_index_statistics
+        case 'select_several_index_predictions':
+            return sql_file_select_several_index_predictions
         case 'select_detail_stock_detail':
             return sql_file_select_detail_stock_detail
         case 'select_category_stock_detail':
             return sql_file_select_category_stock_detail
         case 'insert_index_predictions_data':
             return sql_file_insert_index_predictions_data
+        case 'insert_index_statistics_data':
+            return sql_file_insert_index_statistics_data
         case _:
             return None
 
