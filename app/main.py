@@ -10,10 +10,13 @@ from app.routers.update import router as update_router
 from app.routers.detail import router as detail_router
 from app.routers.category import router as category_router
 from app.routers.recomendation import router as recomendation_router
+from app.routers.auth import router as auth_router
+from app.utils.app_state import set_user_db, get_user_db
+from app.database import init_db
 from fastapi.middleware.cors import CORSMiddleware
-
+import sqlite3
 app = FastAPI(lifespan=lifespan, title="Server", description="Service the finance app")
-
+init_db()
 # API endpoints
 app.include_router(health_router)
 app.include_router(tables_router)
@@ -23,6 +26,7 @@ app.include_router(update_router)
 app.include_router(detail_router)
 app.include_router(category_router)
 app.include_router(recomendation_router)
+app.include_router(auth_router)
 
 # Configure a CORS intermediary to allow requests from the React frontend.
 app.add_middleware(
