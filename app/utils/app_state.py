@@ -12,29 +12,44 @@ FIXED_COLUMNS_IN_FINANCIAL = ["symbol","date"]
 sql_file_create_index_price_table = 'app/db/sql/create_index_price_table.sql'
 sql_file_create_stock_price_table = 'app/db/sql/create_stock_price_table.sql'
 sql_file_create_index_predictions_table = 'app/db/sql/create_index_predictions_table.sql'
+sql_file_create_stock_predictions_table = 'app/db/sql/create_stock_predictions_table.sql'
 sql_file_create_index_statistics_table = 'app/db/sql/create_index_statistics_table.sql'
+sql_file_create_stock_statistics_table = 'app/db/sql/create_stock_statistics_table.sql'
+sql_file_create_stock_rank_table = 'app/db/sql/create_stock_rank_table.sql'
 sql_file_drop_index_price_table = 'app/db/sql/drop_index_price_table.sql'
 sql_file_drop_stock_price_table = 'app/db/sql/drop_stock_price_table.sql'
 sql_file_drop_index_predictions_table = 'app/db/sql/drop_index_predictions_table.sql'
+sql_file_drop_stock_predictions_table = 'app/db/sql/drop_stock_predictions_table.sql'
 sql_file_drop_index_statistics_table = 'app/db/sql/drop_index_statistics_table.sql'
+sql_file_drop_stock_statistics_table = 'app/db/sql/drop_stock_statistics_table.sql'
+sql_file_drop_stock_rank_table = 'app/db/sql/drop_stock_rank_table.sql'
 sql_file_select_symbol_stock_detail = 'app/db/sql/select_symbol_stock_detail.sql'
 sql_file_select_table_name_financial = 'app/db/sql/select_table_name_financial.sql'
 sql_file_select_last_date_index_price = 'app/db/sql/select_last_date_index_price.sql'
 sql_file_select_last_wedate_index_predictions = 'app/db/sql/select_last_wedate_index_predictions.sql'
+sql_file_select_last_wedate_stock_predictions = 'app/db/sql/select_last_wedate_stock_predictions.sql'
 sql_file_select_last_d200edate_index_statistics = 'app/db/sql/select_last_d200edate_index_statistics.sql'
+sql_file_select_last_d200edate_stock_statistics = 'app/db/sql/select_last_d200edate_stock_statistics.sql'
 sql_file_select_any_date_index_price = 'app/db/sql/select_any_date_index_price.sql'
+sql_file_select_any_date_stock_price = 'app/db/sql/select_any_date_stock_price.sql'
 sql_file_select_last_date_stock_price = 'app/db/sql/select_last_date_stock_price.sql'
 sql_file_select_last_date_stock_predictions = 'app/db/sql/select_last_date_stock_predictions.sql'
 sql_file_select_all_stock_price = 'app/db/sql/select_all_stock_price.sql'
 sql_file_select_all_index_price = 'app/db/sql/select_all_index_price.sql'
-sql_file_select_several_stock_price = 'app/db/sql/select_several_stock_price.sql'
 sql_file_select_several_index_price = 'app/db/sql/select_several_index_price.sql'
+sql_file_select_several_stock_price = 'app/db/sql/select_several_stock_price.sql'
 sql_file_select_several_index_statistics = 'app/db/sql/select_several_index_statistics.sql'
+sql_file_select_several_stock_statistics = 'app/db/sql/select_several_stock_statistics.sql'
 sql_file_select_several_index_predictions = 'app/db/sql/select_several_index_predictions.sql'
+sql_file_select_several_stock_predictions = 'app/db/sql/select_several_stock_predictions.sql'
+sql_file_select_several_stock_rank = 'app/db/sql/select_several_stock_rank.sql'
 sql_file_select_detail_stock_detail = 'app/db/sql/select_detail_stock_detail.sql'
 sql_file_select_category_stock_detail = 'app/db/sql/select_category_stock_detail.sql'
 sql_file_insert_index_predictions_data = 'app/db/sql/insert_index_predictions_data.sql'
+sql_file_insert_stock_predictions_data = 'app/db/sql/insert_stock_predictions_data.sql'
 sql_file_insert_index_statistics_data = 'app/db/sql/insert_index_statistics_data.sql'
+sql_file_insert_stock_statistics_data = 'app/db/sql/insert_stock_statistics_data.sql'
+sql_file_insert_stock_rank_data = 'app/db/sql/insert_stock_rank_data.sql'
 
 # database variables
 _fin_db: Optional[sqlite3.Connection] = None
@@ -44,6 +59,12 @@ _user_db: Optional[sqlite3.Connection] = None
 _tickers: Optional[List[str]] = None
 _tickers_lock = threading.Lock()
 _tickers_last_updated: Optional[float] = None
+
+# statistics cache
+_statistics_last_updated: str = ""
+
+# predictions cache
+_predictions_last_updated: str = ""
 
 # model
 _model: Optional[any] = None
@@ -63,16 +84,28 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_create_stock_price_table
         case 'create_index_predictions_table':
             return sql_file_create_index_predictions_table
+        case 'create_stock_predictions_table':
+            return sql_file_create_stock_predictions_table
         case 'create_index_statistics_table':
             return sql_file_create_index_statistics_table
+        case 'create_stock_statistics_table':
+            return sql_file_create_stock_statistics_table
+        case 'create_stock_rank_table':
+            return sql_file_create_stock_rank_table
         case 'drop_index_price_table':
             return sql_file_drop_index_price_table
         case 'drop_stock_price_table':
             return sql_file_drop_stock_price_table
         case 'drop_index_predictions_table':
             return sql_file_drop_index_predictions_table
+        case 'drop_stock_predictions_table':
+            return sql_file_drop_stock_predictions_table
         case 'drop_index_statistics_table':
             return sql_file_drop_index_statistics_table
+        case 'drop_stock_statistics_table':
+            return sql_file_drop_stock_statistics_table
+        case 'drop_stock_rank_table':
+            return sql_file_drop_stock_rank_table
         case 'select_symbol_stock_detail':
             return sql_file_select_symbol_stock_detail
         case 'select_table_name_financial':
@@ -81,10 +114,16 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_select_last_date_index_price
         case 'select_last_wedate_index_predictions':
             return sql_file_select_last_wedate_index_predictions
+        case 'select_last_wedate_stock_predictions':
+            return sql_file_select_last_wedate_stock_predictions
         case 'select_last_d200edate_index_statistics':
             return sql_file_select_last_d200edate_index_statistics
+        case 'select_last_d200edate_stock_statistics':
+            return sql_file_select_last_d200edate_stock_statistics
         case 'select_any_date_index_price':
             return sql_file_select_any_date_index_price
+        case 'select_any_date_stock_price':
+            return sql_file_select_any_date_stock_price
         case 'select_last_date_stock_price':
             return sql_file_select_last_date_stock_price
         case 'select_last_date_stock_predictions':
@@ -99,16 +138,28 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_select_several_index_price
         case 'select_several_index_statistics':
             return sql_file_select_several_index_statistics
+        case 'select_several_stock_statistics':
+            return sql_file_select_several_stock_statistics
         case 'select_several_index_predictions':
             return sql_file_select_several_index_predictions
+        case 'select_several_stock_predictions':
+            return sql_file_select_several_stock_predictions
+        case 'select_several_stock_rank':
+            return sql_file_select_several_stock_rank
         case 'select_detail_stock_detail':
             return sql_file_select_detail_stock_detail
         case 'select_category_stock_detail':
             return sql_file_select_category_stock_detail
         case 'insert_index_predictions_data':
             return sql_file_insert_index_predictions_data
+        case 'insert_stock_predictions_data':
+            return sql_file_insert_stock_predictions_data
         case 'insert_index_statistics_data':
             return sql_file_insert_index_statistics_data
+        case 'insert_stock_statistics_data':
+            return sql_file_insert_stock_statistics_data
+        case 'insert_stock_rank_data':
+            return sql_file_insert_stock_rank_data
         case _:
             return None
 
@@ -149,6 +200,20 @@ def get_tickers_last_updated() -> Optional[float]:
     """Return epoch timestamp of last tickers update, or None if never set."""
     with _tickers_lock:
         return _tickers_last_updated
+    
+def set_statistics_last_updated(timestamp: str) -> None:
+    global _statistics_last_updated
+    _statistics_last_updated = timestamp
+
+def get_statistics_last_updated() -> str:
+    return _statistics_last_updated
+
+def set_predictions_last_updated(timestamp: str) -> None:
+    global _predictions_last_updated
+    _predictions_last_updated = timestamp
+
+def get_predictions_last_updated() -> str:
+    return _predictions_last_updated
 
 def set_model_params(timesteps, num_features, total_inputs) -> None:
     global _timesteps, _num_features, _total_inputs

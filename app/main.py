@@ -10,6 +10,7 @@ from app.routers.update import router as update_router
 from app.routers.detail import router as detail_router
 from app.routers.category import router as category_router
 from app.routers.recomendation import router as recomendation_router
+from app.routers.rank import router as rank_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(lifespan=lifespan, title="Server", description="Service the finance app")
@@ -23,6 +24,7 @@ app.include_router(update_router)
 app.include_router(detail_router)
 app.include_router(category_router)
 app.include_router(recomendation_router)
+app.include_router(rank_router)
 
 # Configure a CORS intermediary to allow requests from the React frontend.
 app.add_middleware(
