@@ -14,6 +14,7 @@ sql_file_create_stock_price_table = 'app/db/sql/create_stock_price_table.sql'
 sql_file_create_index_predictions_table = 'app/db/sql/create_index_predictions_table.sql'
 sql_file_create_index_statistics_table = 'app/db/sql/create_index_statistics_table.sql'
 sql_file_create_user_table = 'app/db/sql/create_user_table.sql'
+sql_file_create_bookmark_table = 'app/db/sql/create_bookmark_table.sql'
 sql_file_drop_index_price_table = 'app/db/sql/drop_index_price_table.sql'
 sql_file_drop_stock_price_table = 'app/db/sql/drop_stock_price_table.sql'
 sql_file_drop_index_predictions_table = 'app/db/sql/drop_index_predictions_table.sql'
@@ -68,6 +69,8 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_create_index_statistics_table
         case 'create_user_table':
             return sql_file_create_user_table
+        case 'create_bookmark_table':
+            return sql_file_create_bookmark_table
         case 'drop_index_price_table':
             return sql_file_drop_index_price_table
         case 'drop_stock_price_table':

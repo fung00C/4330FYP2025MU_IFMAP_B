@@ -14,18 +14,19 @@ from app.repositories.meta import create_table
 
 # Initialize data on startup, fetch stock details and data
 async def init_data_async(app: FastAPI):
-#    await asyncio.to_thread(save_stock_detail) # to_thread can avoid blocking the event loop
-#    await asyncio.to_thread(save_stock_category_json)
-#    await asyncio.to_thread(create_table, get_fin_db(), "stock_price", open_sql_file(get_sql_path("create_index_price_table")))
-#    await asyncio.to_thread(create_table, get_fin_db(), "index_price", open_sql_file(get_sql_path("create_stock_price_table")))
-#   await asyncio.to_thread(create_table, get_fin_db(), "index_predictions", open_sql_file(get_sql_path("create_index_predictions_table")))
-#    await asyncio.to_thread(create_table, get_fin_db(), "index_statistics", open_sql_file(get_sql_path("create_index_statistics_table")))
+    await asyncio.to_thread(save_stock_detail) # to_thread can avoid blocking the event loop
+    await asyncio.to_thread(save_stock_category_json)
+    await asyncio.to_thread(create_table, get_fin_db(), "stock_price", open_sql_file(get_sql_path("create_index_price_table")))
+    await asyncio.to_thread(create_table, get_fin_db(), "index_price", open_sql_file(get_sql_path("create_stock_price_table")))
+    await asyncio.to_thread(create_table, get_fin_db(), "index_predictions", open_sql_file(get_sql_path("create_index_predictions_table")))
+    await asyncio.to_thread(create_table, get_fin_db(), "index_statistics", open_sql_file(get_sql_path("create_index_statistics_table")))
     await asyncio.to_thread(create_table, get_user_db(), "user", open_sql_file(get_sql_path("create_user_table")))
-#    await asyncio.to_thread(store_ticker_symbols, app) 
-#    await asyncio.to_thread(save_stock_data, get_tickers())
-#    await asyncio.to_thread(save_index_data)
-#    await asyncio.to_thread(run_index_statistics_on_startup)
-#    await asyncio.to_thread(run_index_prediction_on_startup)
+    await asyncio.to_thread(create_table, get_user_db(), "bookmark", open_sql_file(get_sql_path("create_bookmark_table")))
+    await asyncio.to_thread(store_ticker_symbols, app) 
+    await asyncio.to_thread(save_stock_data, get_tickers())
+    await asyncio.to_thread(save_index_data)
+    await asyncio.to_thread(run_index_statistics_on_startup)
+    await asyncio.to_thread(run_index_prediction_on_startup)
 
 # Lifespan context manager for FastAPI app
 @asynccontextmanager
