@@ -6,6 +6,7 @@ from fastapi import HTTPException
 
 from app.utils.app_state import get_fin_db, get_sql_path, FIXED_COLUMNS_IN_FINANCIAL
 from app.utils.file import open_sql_file
+from app.utils.json_helper import load_stock_category_map
 
 # read financial.db to get the number of lasted data in a stock_price table
 def get_stock_all_price(symbols: List[str], start_date: Optional[str] = None, end_date: Optional[str] = None, limit: Optional[int] = None) -> pd.DataFrame:
@@ -47,7 +48,8 @@ def get_stock_all_price(symbols: List[str], start_date: Optional[str] = None, en
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params) # 用 pd.read_sql_query(sql, conn, params=params) 直接回傳 DataFrame
         if df.empty:
-            raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock price).")
+            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock price).")
+            print(f"No data found for requested symbols {symbols} in table(stock price).")
         print(f"✅ Retrieved {len(df)} rows for {symbols} in table(stock price)")
         return df
     except Exception as e:
@@ -89,11 +91,103 @@ def get_several_stock_price(symbols: List[str], columns: List[str], start_date: 
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)  # 只綁值，不綁欄位名
         if df.empty:
-            raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock price).")
+            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock price).")
+            print(f"No data found for requested symbols {symbols} in table(stock price).")
         print(f"✅ Retrieved {len(df)} rows of prices({columns}) for {symbols} in table(stock price)")
         return df
     except Exception as e:
         print(f"❌ Error retrieving in table(stock price) for {symbols}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# read financial.db to get several column date stored in stock_statistics table
+def get_several_stock_statistics(symbols: List[str], columns: List[str], start_date: Optional[str] = None, end_date: Optional[str] = None, limit: Optional[int] = None):
+    """
+    從 stock_statistics 表中查詢指定 symbol 特定範圍的任意欄數據。
+    :param symbols: 股票代碼列表，例如 ["AAPL", "MSFT"]
+    :param columns: 數據欄列表，例如 ["days200_ma"]
+    :param start_date: 起始日期 (YYYY-MM-DD)
+    :param end_date: 結束日期 (YYYY-MM-DD)
+    :param limit: 最大返回筆數
+    :return: 查詢結果 DataFrame
+    """
+    sql_template = open_sql_file(get_sql_path('select_several_stock_statistics'))
+    select_cols = ", ".join(columns)
+    sql_template = sql_template.replace("/*SELECT_COLUMNS*/", select_cols)
+    placeholders = ",".join(["?"] * len(symbols))
+    symbol_clause = f"AND symbol IN ({placeholders})"
+    sql_template = sql_template.replace("/*SYMBOL_IN_CLAUSE*/", f"\n  {symbol_clause}")
+    params: List[object] = []
+    params.extend(symbols)
+    if start_date:
+        sql_template = sql_template.replace("/*TIMESTAMP_START_COND*/", "AND date >= ?")
+        params.append(start_date)
+    else:
+        sql_template = sql_template.replace("/*TIMESTAMP_START_COND*/", "")
+    if end_date:
+        sql_template = sql_template.replace("/*TIMESTAMP_END_COND*/", "AND date <= ?")
+        params.append(end_date)
+    else:
+        sql_template = sql_template.replace("/*TIMESTAMP_END_COND*/", "")
+    if limit:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "LIMIT ?")
+        params.append(limit)
+    else:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "")
+    try:
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
+        if df.empty:
+            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock statistics).")
+            print(f"No data found for requested symbols {symbols} in table(stock statistics).")
+        print(f"✅ Retrieved {len(df)} rows for {symbols} in table(stock statistics)")
+        return df
+    except Exception as e:
+        print(f"❌ Error retrieving table(stock statistics) for {symbols}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# read financial.db to get several column date stored in stock_predictions table
+def get_several_stock_predictions(symbols: List[str], columns: List[str], start_date: Optional[str] = None, end_date: Optional[str] = None, limit: Optional[int] = None):
+    """
+    從 stock_predictions 表中查詢指定 symbol 特定範圍的任意欄數據。
+    :param symbols: 股票代碼列表，例如 ["AAPL", "MSFT"]
+    :param columns: 數據欄列表，例如 ["predicted_real"]
+    :param start_date: 起始日期 (YYYY-MM-DD)
+    :param end_date: 結束日期 (YYYY-MM-DD)
+    :param limit: 最大返回筆數
+    :return: 查詢結果 DataFrame
+    """
+    sql_template = open_sql_file(get_sql_path('select_several_stock_predictions'))
+    select_cols = ", ".join(columns)
+    sql_template = sql_template.replace("/*SELECT_COLUMNS*/", select_cols)
+    placeholders = ",".join(["?"] * len(symbols))
+    symbol_clause = f"AND symbol IN ({placeholders})"
+    sql_template = sql_template.replace("/*SYMBOL_IN_CLAUSE*/", f"\n  {symbol_clause}")
+    params: List[object] = []
+    params.extend(symbols)
+    if start_date:
+        sql_template = sql_template.replace("/*TIMESTAMP_START_COND*/", "AND date >= ?")
+        params.append(start_date)
+    else:
+        sql_template = sql_template.replace("/*TIMESTAMP_START_COND*/", "")
+    if end_date:
+        sql_template = sql_template.replace("/*TIMESTAMP_END_COND*/", "AND date <= ?")
+        params.append(end_date)
+    else:
+        sql_template = sql_template.replace("/*TIMESTAMP_END_COND*/", "")
+    if limit:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "LIMIT ?")
+        params.append(limit)
+    else:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "")
+    try:
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
+        if df.empty:
+            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock predictions).")
+            print(f"No data found for requested symbols {symbols} in table(stock predictions).")
+            return None
+        print(f"✅ Retrieved {len(df)} rows for {symbols} in table(stock predictions)")
+        return df
+    except Exception as e:
+        print(f"❌ Error retrieving table(stock predictions) for {symbols}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # read financial.db to get last date stored in stock_price table and return the next date as start_date
@@ -107,29 +201,100 @@ def select_stock_start_date(database: str = "financial.db"):
         if row and row[0]:
             last_date = datetime.fromisoformat(row[0]) # assume stored dates are in YYYY-MM-DD format
             start_date = (last_date + timedelta(days=1)).strftime("%Y-%m-%d")
+            print(f"✅ Last stored date in stock_price table fetched from database '{database}' and next start date is '{start_date}'")
         else:
             start_date = "2015-01-01" # fallback default start date if no data present
-        print(f"✅ Last stored date (stock) fetched from database '{database}'")
+            print(f"⚠️ No existing data found in stock_price table, using default start date '{start_date}'")
         return start_date
     except Exception as e:
-        print(f"❌ Could not determine last stored date (stock), falling back to default. Error: {e}")
+        print(f"❌ Could not determine last stored date in stock_price table, falling back to default. Error: {e}")
         return "2015-01-01"
 
 # read financial.db to get last date stored in stock_price table
-def get_last_stock_date(database: str = "financial.db"):
-    pass
-
+def get_last_date_stock_price(database: str = "financial.db"):
+    last_date = ""
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_last_date_stock_price"))
+        cursor.execute(sql_template)
+        row = cursor.fetchone()
+        if row and row[0]:
+            #last_date = datetime.fromisoformat(row[0]) # assume stored dates are in YYYY-MM-DD format
+            last_date = row[0]
+            print(f"✅ Last date in stock_price table fetched from database '{database}'")
+        else:
+            last_date = None
+            print(f"⚠️ No existing data found in stock_price table")
+        return last_date
+    except Exception as e:
+        print(f"❌ Could not determine last date in stock_price table, falling back to default. Error: {e}")
+        return None
+    
 # read financial.db to get any date with offset and any ticker stored in stock_price table
-def get_any_stock_date(ticker: str, offset: int, database: str = "financial.db"):
-    pass
+def get_any_date_stock_price(ticker: str, offset: int, database: str = "financial.db"):
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_any_date_stock_price"))
+        cursor.execute(sql_template, (ticker, (offset - 1))) # OFFSET window_size - 1 to get the Nth(window_size) record
+        row = cursor.fetchone()
+        if row and row[0]:
+            any_date = row[0]
+            print(f"✅ Any date with offset {offset} for stock '{ticker}' fetched from database '{database}'")
+            return any_date
+        else:
+            print(f"⚠️ No existing data found for stock '{ticker}' to get any date with offset {offset}")
+            return None
+    except Exception as e:
+        print(f"❌ Could not get any date with offset {offset} for stock '{ticker}'. Error: {e}")
+        return None
+    
+def get_last_timestamp_stock_statistics():
+    last_timestamp = ""
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_last_timestamp_stock_statistics"))
+        cursor.execute(sql_template)
+        row = cursor.fetchone()
+        if row and row[0]:
+            last_timestamp = datetime.fromisoformat(row[0]) # assume stored dates are in YYYY-MM-DD format
+            print(f"✅ Last timestamp in stock_statistics table fetched")
+        else:
+            last_timestamp = None
+            print(f"⚠️ No existing data found in stock_statistics table")
+        return last_timestamp
+    except Exception as e:
+        print(f"❌ Could not determine last days200_end_date in stock_statistics table, falling back to default. Error: {e}")
+        return None
 
 # read financial.db to get last window_end_date stored in stock_predictions table
 def get_last_stock_window_end_date(database: str = "financial.db"):
-    pass
+    last_window_end_date = ""
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_last_wedate_stock_predictions"))
+        cursor.execute(sql_template)
+        row = cursor.fetchone()
+        last_window_end_date = row[0]
+        print(f"✅ Last window end date from stock_predictions fetched from database '{database}'")
+        return last_window_end_date
+    except Exception as e:
+        print(f"❌ Could not determine last window end date from stock_predictions, falling back to empty. Error: {e}")
+        return ""
 
 # read financial.db to get last days200_end_date stored in stock_statistics table
 def get_last_stock_days200_end_date(database: str = "financial.db"):
-    pass
+    last_days200_end_date = ""
+    try:
+        cursor = get_fin_db().cursor()
+        sql_template = open_sql_file(get_sql_path("select_last_d200edate_stock_statistics"))
+        cursor.execute(sql_template)
+        row = cursor.fetchone()
+        last_days200_end_date = row[0]
+        print(f"✅ Last days200 end date from stock_statistics fetched from database '{database}'")
+        return last_days200_end_date
+    except Exception as e:
+        print(f"❌ Could not determine last days200 end date from stock_statistics, falling back to empty. Error: {e}")
+        return ""
 
 # read financial.db to get range of close price stored in stock_price table
 def get_range_stock_close_price(ticker: str, limit: int):
@@ -174,3 +339,25 @@ def get_stock_category():
     except Exception as e:
         print(f"❌ Error retrieving stock category data {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+def get_sector_stock_category(ticker: str) -> str:
+    """
+    Return the sector for `ticker` using `json/stock_category.json`.
+    If not found, return an empty string.
+    """
+    try:
+        sector, _ = load_stock_category_map().get(ticker.upper(), ("", ""))
+        return sector
+    except Exception:
+        return ""
+
+def get_industry_stock_category(ticker: str) -> str:
+    """
+    Return the industry for `ticker` using `json/stock_category.json`.
+    If not found, return an empty string.
+    """
+    try:
+        _, industry = load_stock_category_map().get(ticker.upper(), ("", ""))
+        return industry
+    except Exception:
+        return ""

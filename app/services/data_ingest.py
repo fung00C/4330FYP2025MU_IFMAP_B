@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import logging
 import sqlite3
-from typing import List
+from typing import Dict, List
 from datetime import datetime
 
 from app.repositories.stocks import get_stock_category
@@ -98,6 +98,21 @@ def save_index_predictions(data: List[any], ticker: str):
     except sqlite3.Error as e:
         print(f"❌ An error occurred while saving index {ticker} predictions: {e}")
         return False
+    
+# Save stock predictions into financial.db
+def save_stock_predictions(data: List[any], ticker: str):
+    try:
+        db = get_fin_db()
+        cursor = db.cursor()
+        sql_template = open_sql_file(get_sql_path("insert_stock_predictions_data"))
+        prediction_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute(sql_template, (data["ticker"], prediction_date, data["window_size"], data["window_start_date"], data["window_end_date"], data["predicted_scaled"], data["predicted_real"], data["last_actual_close"], data["recommendation"], data["feature_number"], data["input_features_length"]))
+        db.commit()
+        print(f"✅ Stock {ticker} predictions saved successfully.")
+        return True
+    except sqlite3.Error as e:
+        print(f"❌ An error occurred while saving stock {ticker} predictions: {e}")
+        return False
 
 # Save index statistics into financial.db
 def save_index_statistics(data: List[any], ticker: str):
@@ -114,6 +129,35 @@ def save_index_statistics(data: List[any], ticker: str):
         print(f"❌ An error occurred while saving index {ticker} statistics: {e}")
         return False
     
+# Save stock statistics into financial.db
+def save_stock_statistics(data: Dict[str, str], ticker: str):#
+    try:
+        db = get_fin_db()
+        cursor = db.cursor()
+        sql_template = open_sql_file(get_sql_path("insert_stock_statistics_data"))
+        statistics_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute(sql_template, (data["ticker"], statistics_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
+        db.commit()
+        print(f"✅ Stock {ticker} statistics saved successfully.")
+        return True
+    except sqlite3.Error as e:
+        print(f"❌ An error occurred while saving stock {ticker} statistics: {e}")
+        return False
+
+def save_stock_rank(data: List[any], ticker: str):
+    try:
+        db = get_fin_db()
+        cursor = db.cursor()
+        sql_template = open_sql_file(get_sql_path("insert_stock_rank_data"))
+        rank_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute(sql_template, (rank_date, data["ticker"], data["sector"], data["industry"], data["current_price"], data["potential"]))
+        db.commit()
+        print(f"✅ Stock {ticker} rank data saved successfully.")
+        return True
+    except sqlite3.Error as e:
+        print(f"❌ An error occurred while saving stock {ticker} rank data: {e}")
+        return False
+
 # Save stock category JSON file
 def save_stock_category_json():
     try:
