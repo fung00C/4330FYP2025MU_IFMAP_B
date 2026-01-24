@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 import pandas as pd
 
 from app.repositories.indexes import get_several_index_predictions, get_several_index_statistics
+from app.repositories.stocks import get_several_stock_statistics, get_several_stock_predictions
 
 router = APIRouter(prefix="/recommendation", tags=["recommendation"])
 
@@ -14,7 +15,23 @@ async def api_get_stock_prediction(
     """
     Get a specific stock recommendation data
     """
-    pass
+    
+    try:
+        # 輸入驗證
+        if not symbol:
+            raise HTTPException(status_code=404, detail=f"symbols must not be empty")
+        df_st = get_several_stock_statistics(symbols=symbol, columns=['days200_ma'], limit=1)
+        df_pd = get_several_stock_predictions(symbols=symbol, columns=['predicted_real', 'recommendation'], limit=1)
+        df = pd.concat([df_st, df_pd], axis=1)
+        result = df.to_dict(orient="records") # 將 DataFrame 轉為 JSON 格式輸出
+        return {"search": symbol, "data": result}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+    
 
 @router.get("/index")
 async def api_get_index_prediction(

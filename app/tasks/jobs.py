@@ -43,10 +43,13 @@ def run_index_statistics_on_startup(ticker: str = "^GSPC"):
         last_index_date = get_last_date_index_price()
         last_days200_end_date = get_last_index_days200_end_date()
 
+        """
         # Skip prediction if no new data since last prediction
         if last_index_date == last_days200_end_date:
             print(f"⭕️ Skipping index statistics, no new data since last statistics on {last_days200_end_date}.")
             return
+        """
+        
 
         # Data post-processing
         days200_start_date = get_any_date_index_price(ticker, 200)
@@ -71,11 +74,14 @@ def run_stock_statistics_on_startup(tickers: List[str]):
         for ticker in tickers:
             last_stock_date = get_last_date_stock_price()
             last_days200_end_date = get_last_stock_days200_end_date()
-
+            
+            """
             # Skip prediction if no new data since last prediction
             if last_stock_date == last_days200_end_date:
                 print(f"⭕️ Skipping stock statistics, no new data since last statistics on {last_days200_end_date}.")
                 continue
+            """
+            
 
             # Data post-processing
             days200_start_date = get_any_date_stock_price(ticker, 200)
@@ -101,9 +107,9 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         last_days200_ma = get_several_index_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
 
         # Skip prediction if no new data since last prediction
-        if last_index_date == last_window_end_date:
+        """if last_index_date == last_window_end_date:
             print(f"⭕️ Skipping index prediction, no new data since last prediction on {last_window_end_date}.")
-            return
+            return"""
 
         # Get latest days(window size) of close and volume for ticker
         df = get_several_index_price([ticker], ['close', 'volume'], limit=window_size)
@@ -177,10 +183,13 @@ def run_stock_prediction_on_startup(tickers: List[str]):
             # Get latest days(window size) of close and volume for ticker
             df = get_several_stock_price([ticker], ['close', 'volume'], limit=window_size)
 
+            
             # Check data sufficiency
             if df.empty or len(df) < int(window_size):
                 print(f"⚠️ Not enough stock data {ticker} for prediction (need {window_size} days)")
-                return
+                continue
+            
+            
             
             # Prepare standardized features
             closes = df['close'].values.astype(float).reshape(-1, 1)
