@@ -32,7 +32,7 @@ async def init_data_async(app: FastAPI):
     await asyncio.to_thread(run_stock_statistics_on_startup, get_tickers())
     await asyncio.to_thread(run_index_prediction_on_startup)
     await asyncio.to_thread(run_stock_prediction_on_startup, get_tickers()) # TODO: all tickers ['AAPL', 'MSFT', 'GOOGL']
-    #await asyncio.to_thread(run_stock_rank_on_startup, get_tickers()) # TODO: all tickers ['AAPL', 'MSFT', 'GOOGL']
+    await asyncio.to_thread(run_stock_rank_on_startup, get_tickers()) # TODO: all tickers ['AAPL', 'MSFT', 'GOOGL']
     
     
     

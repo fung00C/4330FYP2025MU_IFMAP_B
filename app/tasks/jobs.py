@@ -82,7 +82,7 @@ def run_stock_statistics_on_startup(tickers: List[str]):
                 continue
             """
             
-
+            
             # Data post-processing
             days200_start_date = get_any_date_stock_price(ticker, 200)
             days200_end_date = get_last_date_stock_price()
@@ -106,10 +106,13 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         window_size = get_model_params("timesteps")
         last_days200_ma = get_several_index_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
 
+        """
         # Skip prediction if no new data since last prediction
-        """if last_index_date == last_window_end_date:
+        if last_index_date == last_window_end_date:
             print(f"⭕️ Skipping index prediction, no new data since last prediction on {last_window_end_date}.")
-            return"""
+            return
+        """
+        
 
         # Get latest days(window size) of close and volume for ticker
         df = get_several_index_price([ticker], ['close', 'volume'], limit=window_size)
@@ -174,11 +177,13 @@ def run_stock_prediction_on_startup(tickers: List[str]):
             last_window_end_date = get_last_stock_window_end_date()
             window_size = get_model_params("timesteps")
             last_days200_ma = get_several_stock_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
-
-            """# Skip prediction if no new data since last prediction
+            """
+            # Skip prediction if no new data since last prediction
             if last_stock_date == last_window_end_date:
                 print(f"⭕️ Skipping stock prediction, no new data since last prediction on {last_window_end_date}.")
-                return"""
+                continue
+            """
+            
 
             # Get latest days(window size) of close and volume for ticker
             df = get_several_stock_price([ticker], ['close', 'volume'], limit=window_size)
@@ -258,12 +263,12 @@ def run_stock_rank_on_startup(tickers: List[str]):
         sorted_temp_po = {k: v for k, v in sorted(temp_po.items(), key=lambda item: item[1], reverse=True)}
         print(f"sorted_temp_po: {sorted_temp_po}")
             
-        """for ticker in tickers:
+        for ticker in tickers:
             # Data post-processing
             sector = get_sector_stock_category(ticker)
             industry = get_industry_stock_category(ticker)
             current_price = get_several_stock_price([ticker], ['close'], limit=1)['close'][0]
-            potential = temp['potential']
+            potential = calculate_stock_potensoial(ticker)
 
             # Prepare data for insertion
             data = {}
@@ -277,7 +282,7 @@ def run_stock_rank_on_startup(tickers: List[str]):
             save_stock_rank(data, ticker)
 
             print(f"📈 stock {ticker} Potential result on startup:")
-            print(f"Potential: {potential}%")"""
+            print(f"Potential: {potential}%")
 
         """ # backup
         for ticker in tickers:

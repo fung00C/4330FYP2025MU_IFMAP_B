@@ -8,6 +8,37 @@ from app.utils.app_state import get_fin_db, get_sql_path, FIXED_COLUMNS_IN_FINAN
 from app.utils.file import open_sql_file
 from app.utils.json_helper import load_stock_category_map
 
+def get_serveral_stock_rank(symbols: List[str], columns: List[str], limit: Optional[int] = None):
+    """
+    從 stock_rank 表中查詢指定 symbol 特定範圍的任意欄數據。
+    :param symbols: 股票代碼列表，例如 ["AAPL", "MSFT"]
+    :param columns: 數據欄列表，例如 ["potential"]
+    :param limit: 最大返回筆數
+    :return: 查詢結果 DataFrame
+    """
+    sql_template = open_sql_file(get_sql_path('select_several_stock_rank'))
+    select_cols = ", ".join(columns)
+    sql_template = sql_template.replace("/*SELECT_COLUMNS*/", select_cols)
+    placeholders = ",".join(["?"] * len(symbols))
+    symbol_clause = f"AND symbol IN ({placeholders})"
+    sql_template = sql_template.replace("/*SYMBOL_IN_CLAUSE*/", f"\n  {symbol_clause}")
+    params: List[object] = []
+    params.extend(symbols)
+    if limit:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "LIMIT ?")
+        params.append(limit)
+    else:
+        sql_template = sql_template.replace("/*DATA_LIMIT*/", "")
+    try:
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
+        if df.empty:
+            print(f"No data found for requested symbols {symbols} in table(stock rank).")
+        print(f"✅ Retrieved {len(df)} rows for {symbols} in table(stock rank)")
+        return df
+    except Exception as e:
+        print(f"❌ Error retrieving table(stock rank) for {symbols}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # read financial.db to get the number of lasted data in a stock_price table
 def get_stock_all_price(symbols: List[str], start_date: Optional[str] = None, end_date: Optional[str] = None, limit: Optional[int] = None) -> pd.DataFrame:
     """

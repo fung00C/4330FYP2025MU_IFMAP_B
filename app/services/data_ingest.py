@@ -51,7 +51,7 @@ def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date
                 print(f"⭕️ Skipping {ticker} due to error: {ticker_error}")
         if failed_tickers:
             print(f"⚠️ Failed tickers: {failed_tickers}. Check if they are delisted or invalid.")
-            #refresh_tickers_list(failed_tickers) #TODO
+            refresh_tickers_list(failed_tickers) #TODO
         return {"success": True, "failed tickers": failed_tickers}
     except Exception as e:
         print(f"❌ An error occurred during download: {e}")
