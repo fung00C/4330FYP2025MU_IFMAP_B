@@ -1,13 +1,14 @@
 # app/routers/auth.py
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from app.models import UserCreate, User, Token
-from app.database import SessionLocal  # Import the session
+from app.models import UserCreate, User
+from app.database import SessionLocal  # Import the Session
 import bcrypt
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
-SECRET_KEY = "123"  # Update this with your own secret key
+# Constants for JWT settings
+SECRET_KEY = "123"  # Replace with your secure secret key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 5
 
@@ -21,15 +22,12 @@ def get_db():
     finally:
         db.close()
 
+# Function to create a JWT token
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 @router.post("/signup")
 async def signup(user: UserCreate, db: Session = Depends(get_db)):
@@ -47,19 +45,21 @@ async def signup(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return {"message": "User created successfully"}
+
 @router.post("/login")
 async def login(user: UserCreate, db: Session = Depends(get_db)):
     # Check if the user exists
     existing_user = db.query(User).filter(User.email == user.email).first()
     if not existing_user:
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+        raise HTTPException(status_code=400, detail="Invalid User")
     
     # Check the password
     if not bcrypt.checkpw(user.password.encode('utf-8'), existing_user.password.encode('utf-8')):
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+        raise HTTPException(status_code=400, detail="Invalid Password")
     
+    # Create access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": existing_user.email}, expires_delta=access_token_expires
-    )
+    access_token = create_access_token(data={"sub": existing_user.email}, expires_delta=access_token_expires)
+    
     return {"access_token": access_token, "token_type": "bearer"}
+

@@ -101,9 +101,9 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         last_days200_ma = get_several_index_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
 
         # Skip prediction if no new data since last prediction
-        if last_index_date == last_window_end_date:
+        """if last_index_date == last_window_end_date:
             print(f"⭕️ Skipping index prediction, no new data since last prediction on {last_window_end_date}.")
-            return
+            return"""
 
         # Get latest days(window size) of close and volume for ticker
         df = get_several_index_price([ticker], ['close', 'volume'], limit=window_size)
