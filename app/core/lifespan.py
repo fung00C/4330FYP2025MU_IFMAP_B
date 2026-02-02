@@ -24,6 +24,7 @@ async def init_data_async(app: FastAPI):
     await asyncio.to_thread(create_table, get_fin_db(), "stock_predictions", open_sql_file(get_sql_path("create_stock_predictions_table")))
     await asyncio.to_thread(create_table, get_fin_db(), "stock_rank", open_sql_file(get_sql_path("create_stock_rank_table")))
     await asyncio.to_thread(create_table, get_user_db(), "user", open_sql_file(get_sql_path("create_user_table")))
+    await asyncio.to_thread(create_table, get_user_db(), "bookmark", open_sql_file(get_sql_path("create_bookmark_table")))
     await asyncio.to_thread(store_ticker_symbols, app) 
     
     await asyncio.to_thread(save_stock_data, get_tickers())

@@ -11,6 +11,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
+    bookmarks = relationship("Bookmark", back_populates="user")
+
 
 class Bookmark(Base):
     __tablename__ = "bookmark"  # Adjusted to plural form for consistency
@@ -43,7 +45,6 @@ class BookmarkCreate(BaseModel):
     stock_symbol: str
 
 class BookmarkResponse(BaseModel):
-    id: int
     email: str
     stock_symbol: str
 
