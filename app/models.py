@@ -15,16 +15,14 @@ class User(Base):
 
 
 class Bookmark(Base):
-    __tablename__ = "bookmark"  # Adjusted to plural form for consistency
+    __tablename__ = "bookmark"  # Table for bookmarks
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, ForeignKey("user.email"), nullable=False)
+    user_email = Column('email', String, ForeignKey("user.email"), nullable=False)
     stock_symbol = Column(String, nullable=False)
     
-    # Relationship to User model (optional, but useful for validation/loading user data)
-    user = relationship("User", back_populates="bookmark")
-
-User.bookmark = relationship("Bookmark", order_by=Bookmark.id, back_populates="user")
+    # Relationship to User model
+    user = relationship("User", back_populates="bookmarks")
 
 class UserCreate(BaseModel):
     email: str
@@ -41,11 +39,10 @@ class Token(BaseModel):
     token_type: str
 
 class BookmarkCreate(BaseModel):
-    email: str
     stock_symbol: str
 
 class BookmarkResponse(BaseModel):
-    email: str
+    user_email: str
     stock_symbol: str
 
     class Config:
