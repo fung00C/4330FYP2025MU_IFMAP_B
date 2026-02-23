@@ -7,6 +7,71 @@ from app.dependencies import get_current_user, get_db
 from app.models import Bookmark, User, BookmarkCreate
 from app.database import SessionLocal
 
+from app.utils.file import open_sql_file
+from app.utils.app_state import get_sql_path, get_user_db
+import pandas as pd
+
+router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
+
+# Dependency to get the database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@router.post("/add")
+async def api_add_bookmark(
+    symbol: str,
+    email: str,
+): 
+    sql = open_sql_file(get_sql_path('insert_bookmark'))
+    params = (email, symbol)
+    con = get_user_db()
+    try:
+        con.execute(sql, params)
+        con.commit()
+        return {"message": f"Bookmark for {symbol} added for user {email}"}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.delete("/remove")
+async def api_remove_bookmark(
+    symbol: str,
+    email: str,
+):
+    sql = open_sql_file(get_sql_path('delete_bookmark'))
+    params = (email, symbol)
+    con = get_user_db()
+    try:
+        con.execute(sql, params)
+        con.commit()
+        return {"message": f"Bookmark for {symbol} removed for user {email}"}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/get")
+async def api_get_bookmarks(
+    email: str,
+):
+    sql = open_sql_file(get_sql_path("select_bookmark"))
+    con = get_user_db()
+    try:
+        df = con.execute(sql, (email,)).fetchall()
+        con.commit()
+        data = [row[0] for row in df]  # Assuming the stock_symbol is the first column
+        return {"count": len(data), "data": data}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+"""
 router = APIRouter()
 
 # Dependency to get the database session
@@ -57,4 +122,4 @@ async def get_bookmarks(
     db: Session = Depends(get_db)
 ):
     bookmarks = db.query(Bookmark).filter(Bookmark.user_id == current_user.id).all()
-    return bookmarks
+    return bookmarks"""

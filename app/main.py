@@ -13,6 +13,7 @@ from app.routers.recomendation import router as recomendation_router
 from app.routers.rank import router as rank_router
 from app.routers.auth import router as auth_router
 from app.routers.user import router as user_router
+from app.routers.bookmark import router as bookmark_router
 from app.utils.app_state import set_user_db, get_user_db
 from app.database import init_db
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,6 +32,7 @@ app.include_router(recomendation_router)
 app.include_router(rank_router)
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(bookmark_router)
 
 # Configure a CORS intermediary to allow requests from the React frontend.
 app.add_middleware(
