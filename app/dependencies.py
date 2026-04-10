@@ -1,6 +1,6 @@
 # app/dependencies.py
 from fastapi import Depends, HTTPException, status
-from jose import jwt
+from jose import jwt, JWTError
 from app.models import User
 from sqlalchemy.orm import Session
 from app.database import SessionLocal

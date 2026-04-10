@@ -1,5 +1,5 @@
 CREATE TABLE if not EXISTS bookmark (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL,
     stock_symbol TEXT NOT NULL,
 
