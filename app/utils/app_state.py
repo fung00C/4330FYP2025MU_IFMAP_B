@@ -52,6 +52,9 @@ sql_file_insert_stock_predictions_data = 'app/db/sql/insert_stock_predictions_da
 sql_file_insert_index_statistics_data = 'app/db/sql/insert_index_statistics_data.sql'
 sql_file_insert_stock_statistics_data = 'app/db/sql/insert_stock_statistics_data.sql'
 sql_file_insert_stock_rank_data = 'app/db/sql/insert_stock_rank_data.sql'
+sql_file_insert_bookmark = 'app/db/sql/insert_bookmark.sql'
+sql_file_delete_bookmark = 'app/db/sql/delete_bookmark.sql'
+sql_file_select_bookmark = 'app/db/sql/select_bookmark.sql'
 
 # database variables
 _fin_db: Optional[sqlite3.Connection] = None
@@ -160,6 +163,12 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_insert_index_predictions_data
         case 'insert_stock_predictions_data':
             return sql_file_insert_stock_predictions_data
+        case 'insert_bookmark':
+            return sql_file_insert_bookmark
+        case 'delete_bookmark':
+            return sql_file_delete_bookmark
+        case 'select_bookmark':
+            return sql_file_select_bookmark
         case 'insert_index_statistics_data':
             return sql_file_insert_index_statistics_data
         case 'insert_stock_statistics_data':
