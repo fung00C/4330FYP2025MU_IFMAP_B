@@ -9,7 +9,7 @@ from app.repositories.indexes import get_any_date_index_price, get_last_index_da
 from app.repositories.stocks import get_any_date_stock_price, get_industry_stock_category, get_last_date_stock_price, get_last_stock_days200_end_date, get_last_stock_window_end_date, get_sector_stock_category, get_several_stock_price, get_several_stock_statistics, select_stock_start_date
 from app.tasks.algorithm import calculate_stock_potensoial, days_index_moving_average, days_stock_moving_average, compute_rsi
 from app.utils.app_state import get_tickers, get_model_params
-from app.tasks.predictions import destandardize_data, predict, standardize_index_data, standardize_stock_data, PredictionInput
+from app.tasks.predictions import destandardize_data, predict, standardize_index_data, standardize_stock_data, PredictionInput, PredictionInput_stock
 from app.services.data_ingest import save_index_predictions
 
 # update stock data job for scheduler of daily updates
@@ -175,6 +175,7 @@ def run_stock_prediction_on_startup(tickers: List[str]):
         for ticker in tickers:
             last_stock_date = get_last_date_stock_price()
             last_window_end_date = get_last_stock_window_end_date()
+            print(f"ticker --> {ticker}")
             window_size = get_model_params("timesteps", ticker)
             last_days200_ma = get_several_stock_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
             """
@@ -194,17 +195,23 @@ def run_stock_prediction_on_startup(tickers: List[str]):
             
             # Prepare standardized features
             closes = df['close'].values.astype(float).reshape(-1, 1)
-            #print(closes)
-            rsi = compute_rsi(df['close'], period=14).to_numpy().astype(float).reshape(-1, 1)
-            print(rsi)
-            sma50 = df['close'].rolling(50).mean().to_numpy().astype(float).reshape(-1, 1)
-            print(sma50)
-
+            rsi = compute_rsi(df['close'], period=14).fillna(0).to_numpy().astype(float).reshape(-1, 1)
+            sma50 = df['close'].rolling(50).mean().fillna(0).to_numpy().astype(float).reshape(-1, 1)
+            
             # Standardize data
             features = standardize_stock_data(closes, rsi, sma50)
 
-            # Create PredictionInput
-            input_data = PredictionInput(features=features)
+            # Check if features are valid
+            if features is None or not isinstance(features, (list, np.ndarray)) or len(features) == 0:
+                print(f"⚠️ Features for {ticker} are invalid or empty. Skipping prediction.")
+                return
+
+            # Ensure features is a list
+            if isinstance(features, np.ndarray):
+                features = features.tolist()
+
+            # Create PredictionInput_stock
+            input_data = PredictionInput_stock(features=features)
 
             # Run prediction
             result = predict(input_data, ticker)

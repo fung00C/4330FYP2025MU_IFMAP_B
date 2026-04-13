@@ -5,8 +5,9 @@ import threading
 import time
 
 # index_piece and stock_price table column name
-ALLOWED_COLUMNS_IN_FINANCIAL = {"open","high","low","close","volume"}  # 白名單
+ALLOWED_COLUMNS_IN_FINANCIAL = {"open","high","low","close","volume"} 
 FIXED_COLUMNS_IN_FINANCIAL = ["symbol","date"]
+DROP_STOCK_LIST = ['AMTM', 'SOLV', 'GEV', 'VLTO'] # They are not enough data for training
 
 # SQL file paths
 sql_file_create_index_price_table = 'app/db/sql/create_index_price_table.sql'

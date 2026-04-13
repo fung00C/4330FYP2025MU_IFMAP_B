@@ -14,6 +14,8 @@ scaler_y = StandardScaler()
 # The Pydantic model defines the input format (e.g., a list of floating-point numbers for financial features such as stock price and trading volume).
 class PredictionInput(BaseModel):
     features: List[float] = Field(..., min_items=120, max_items=120) # Adjusted to 120 inputs (60 steps x 2 features); '...' means required
+class PredictionInput_stock(BaseModel):
+    features: List[float] = Field(..., min_items=180, max_items=180) # Adjusted to 180 inputs (60 steps x 3 features); '...' means required
 
 # Receive input features and perform model prediction.
 def predict(input_data: PredictionInput, symbol: str):
@@ -71,12 +73,12 @@ def standardize_stock_data(closes: np.ndarray, rsi: np.ndarray, sma50: np.ndarra
     X_scaled = scaler_X.fit_transform(X)
     y_scaled = scaler_y.fit_transform(y)
 
-    # Prepare features: [close1_scaled, volume1_scaled, close2_scaled, volume2_scaled, ..., close60_scaled, volume60_scaled]
+    # Prepare features: [close1_scaled, rsi1_scaled, sma50_1_scaled, close2_scaled, rsi2_scaled, sma50_2_scaled, ..., close60_scaled, rsi60_scaled, sma50_60_scaled]
     features = X_scaled.reshape(-1).tolist()
 
     # Check if enough data
-    if len(features) != 120:
-        print(f"⚠️ Features length {len(features)} != 120, skipping prediction")
+    if len(features) != 180:
+        print(f"⚠️ Features length {len(features)} != 180, skipping prediction")
         return
     
     return features

@@ -13,7 +13,7 @@ from app.services.data_clean import clean_index_df, clean_stock_panel
 from app.services.data_refresh import refresh_tickers_list
 from app.utils.file import open_sql_file
 from app.utils.pandas_helper import append_df
-from app.utils.app_state import get_fin_db, get_sql_path, set_tickers
+from app.utils.app_state import DROP_STOCK_LIST, get_fin_db, get_sql_path, set_tickers
 from app.repositories.meta import get_ticker_symbols
 
 logger = logging.getLogger(__name__)
@@ -82,6 +82,7 @@ def store_ticker_symbols(app):
         logger.debug("app.state not available; tickers stored in utils cache only: %s", e) # expected in some test or minimal contexts; keep a debug log
     except Exception as e:
         logger.exception("Unexpected error while setting app.state.tickers: %s", e) # unexpected errors should be visible in logs for troubleshooting
+    tickers = [s for s in tickers if s not in DROP_STOCK_LIST] # Remove symbols in dropList
     set_tickers(tickers) # always set into utils cache as the canonical source for non-request code
 
 # Save index predictions into financial.db

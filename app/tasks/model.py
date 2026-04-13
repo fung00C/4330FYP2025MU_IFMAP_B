@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 
-from app.utils.app_state import set_model, set_model_params
+from app.utils.app_state import set_model, set_model_params, get_tickers
 
 def add_model_params(model: tf.keras.Model, symbol: str):
     # Check the input shape (feature count is shape[-1], exclude batches).
@@ -38,8 +38,8 @@ def load_model():
         print("✅ ML model for ^GSPC loaded successfully.")
         set_model(model, "^GSPC")
         add_model_params(model, "^GSPC")
-
-        for symbol in ['AAPL', 'MSFT', 'GOOGL']:
+        print(get_tickers())
+        for symbol in get_tickers(): # ['AAPL', 'MSFT', 'GOOGL']
             model = tf.keras.models.load_model(f'../4330FYP2025MU_IFMAP_B/models/{symbol}_model.h5')
             print(f"✅ ML model for {symbol} loaded successfully.")
             set_model(model, symbol)
