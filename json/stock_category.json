@@ -52,23 +52,19 @@
           "ROP",
           "FICO",
           "PAYX",
-          "ANSS",
           "TYL",
           "PTC",
-          "PAYC",
-          "DAY"
+          "PAYC"
         ],
         "Communication Equipment": [
           "CSCO",
           "MSI",
           "HPE",
-          "ZBRA",
-          "JNPR"
+          "ZBRA"
         ],
         "Information Technology Services": [
           "ACN",
           "IBM",
-          "FI",
           "FIS",
           "CTSH",
           "IT",
@@ -225,8 +221,7 @@
           "FOXA",
           "FOX",
           "NWS",
-          "NWSA",
-          "PARA"
+          "NWSA"
         ],
         "Telecom Services": [
           "TMUS",
@@ -240,8 +235,7 @@
           "TTWO"
         ],
         "Advertising Agencies": [
-          "OMC",
-          "IPG"
+          "OMC"
         ]
       }
     },
@@ -265,7 +259,6 @@
           "AXP",
           "PYPL",
           "COF",
-          "DFS",
           "SYF"
         ],
         "Asset Management": [
@@ -309,7 +302,6 @@
           "AIZ"
         ],
         "Insurance Brokers": [
-          "MMC",
           "AON",
           "AJG",
           "WTW",
@@ -383,7 +375,6 @@
         "Packaged Foods": [
           "KHC",
           "GIS",
-          "K",
           "MKC",
           "HRL",
           "CAG",
@@ -483,9 +474,6 @@
         "Health Information Services": [
           "GEHC",
           "SOLV"
-        ],
-        "Pharmaceutical Retailers": [
-          "WBA"
         ]
       }
     },
@@ -500,7 +488,6 @@
           "EOG",
           "FANG",
           "OXY",
-          "HES",
           "TPL",
           "EQT",
           "DVN",
