@@ -72,13 +72,14 @@ _statistics_last_updated: str = ""
 _predictions_last_updated: str = ""
 
 # model
-_model: Optional[any] = None
+#_model: Optional[any] = None
+_model: Optional[any] = {}
 
 # model variables
 _input_shape = None
-_timesteps = None
-_num_features = None
-_total_inputs = None
+_timesteps: dict[str, int] = {}
+_num_features: dict[str, int] = {}
+_total_inputs: dict[str, int] = {}
 _data_type = None
 
 def get_sql_path(arg) -> Optional[str]:
@@ -230,26 +231,32 @@ def set_predictions_last_updated(timestamp: str) -> None:
 def get_predictions_last_updated() -> str:
     return _predictions_last_updated
 
-def set_model_params(timesteps, num_features, total_inputs) -> None:
-    global _timesteps, _num_features, _total_inputs
+def set_model_params(timesteps, num_features, total_inputs, symbol: str) -> None:
+    """global _timesteps, _num_features, _total_inputs
     _timesteps = timesteps
     _num_features = num_features
-    _total_inputs = total_inputs
+    _total_inputs = total_inputs"""
+    global _timesteps, _num_features, _total_inputs
+    _timesteps[symbol] = timesteps
+    _num_features[symbol] = num_features
+    _total_inputs[symbol] = total_inputs
 
-def get_model_params(arg) -> Optional[str]:
+def get_model_params(arg, symbol: str) -> Optional[str]:
     match arg:
         case 'timesteps':
-            return _timesteps
+            return _timesteps.get(symbol)
         case 'num_features':
-            return _num_features
+            return _num_features.get(symbol)
         case 'total_inputs':
-            return _total_inputs
+            return _total_inputs.get(symbol)
         case _:
             return None
         
-def set_model(model_instance) -> None:
+def set_model(model_instance, symbol: str) -> None:
+    """global _model
+    _model = model_instance"""
     global _model
-    _model = model_instance
+    _model[symbol] = model_instance
 
-def get_model():
-    return _model
+def get_model(symbol: str):
+    return _model.get(symbol)

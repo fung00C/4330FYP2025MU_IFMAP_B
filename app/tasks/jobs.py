@@ -7,9 +7,9 @@ from datetime import datetime
 from app.services.data_ingest import save_index_statistics, save_stock_data, save_index_data, save_stock_predictions, save_stock_rank, save_stock_statistics
 from app.repositories.indexes import get_any_date_index_price, get_last_index_days200_end_date, get_several_index_statistics, select_index_start_date, get_last_date_index_price, get_several_index_price, get_last_index_window_end_date
 from app.repositories.stocks import get_any_date_stock_price, get_industry_stock_category, get_last_date_stock_price, get_last_stock_days200_end_date, get_last_stock_window_end_date, get_sector_stock_category, get_several_stock_price, get_several_stock_statistics, select_stock_start_date
-from app.tasks.algorithm import calculate_stock_potensoial, days_index_moving_average, days_stock_moving_average
+from app.tasks.algorithm import calculate_stock_potensoial, days_index_moving_average, days_stock_moving_average, compute_rsi
 from app.utils.app_state import get_tickers, get_model_params
-from app.tasks.predictions import destandardize_data, predict, standardize_data, PredictionInput
+from app.tasks.predictions import destandardize_data, predict, standardize_index_data, standardize_stock_data, PredictionInput
 from app.services.data_ingest import save_index_predictions
 
 # update stock data job for scheduler of daily updates
@@ -103,7 +103,7 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
     try:
         last_index_date = get_last_date_index_price()
         last_window_end_date = get_last_index_window_end_date()
-        window_size = get_model_params("timesteps")
+        window_size = get_model_params("timesteps", ticker)
         last_days200_ma = get_several_index_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
 
         """
@@ -127,13 +127,13 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         volumes = df['volume'].values.astype(float).reshape(-1, 1)
 
         # Standardize data
-        features = standardize_data(closes, volumes)
+        features = standardize_index_data(closes, volumes)
 
         # Create PredictionInput
         input_data = PredictionInput(features=features)
 
         # Run prediction
-        result = predict(input_data)
+        result = predict(input_data, "^GSPC")
         
         # Data post-processing
         window_start_date = get_any_date_index_price(ticker, window_size)
@@ -142,7 +142,7 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         predicted_real = destandardize_data(predicted_scaled) # Destandardize predicted value
         last_actual_close = closes[-1, 0]
         recommendation = "BUY" if predicted_real >= last_days200_ma['days200_ma'][0] else "SELL"
-        feature_number = get_model_params("num_features")
+        feature_number = get_model_params("num_features", ticker)
         input_features_length = len(result['input_features'])
         
         # Prepare data for insertion
@@ -175,7 +175,7 @@ def run_stock_prediction_on_startup(tickers: List[str]):
         for ticker in tickers:
             last_stock_date = get_last_date_stock_price()
             last_window_end_date = get_last_stock_window_end_date()
-            window_size = get_model_params("timesteps")
+            window_size = get_model_params("timesteps", ticker)
             last_days200_ma = get_several_stock_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
             """
             # Skip prediction if no new data since last prediction
@@ -184,30 +184,30 @@ def run_stock_prediction_on_startup(tickers: List[str]):
                 continue
             """
             
-
             # Get latest days(window size) of close and volume for ticker
             df = get_several_stock_price([ticker], ['close', 'volume'], limit=window_size)
 
-            
             # Check data sufficiency
             if df.empty or len(df) < int(window_size):
                 print(f"⚠️ Not enough stock data {ticker} for prediction (need {window_size} days)")
                 continue
             
-            
-            
             # Prepare standardized features
             closes = df['close'].values.astype(float).reshape(-1, 1)
-            volumes = df['volume'].values.astype(float).reshape(-1, 1)
+            #print(closes)
+            rsi = compute_rsi(df['close'], period=14).to_numpy().astype(float).reshape(-1, 1)
+            print(rsi)
+            sma50 = df['close'].rolling(50).mean().to_numpy().astype(float).reshape(-1, 1)
+            print(sma50)
 
             # Standardize data
-            features = standardize_data(closes, volumes)
+            features = standardize_stock_data(closes, rsi, sma50)
 
             # Create PredictionInput
             input_data = PredictionInput(features=features)
 
             # Run prediction
-            result = predict(input_data)
+            result = predict(input_data, ticker)
             
             # Data post-processing
             window_start_date = get_any_date_stock_price(ticker, window_size)
@@ -216,7 +216,7 @@ def run_stock_prediction_on_startup(tickers: List[str]):
             predicted_real = destandardize_data(predicted_scaled) # Destandardize predicted value
             last_actual_close = closes[-1, 0]
             recommendation = "BUY" if predicted_real >= last_days200_ma['days200_ma'][0] else "SELL"
-            feature_number = get_model_params("num_features")
+            feature_number = get_model_params("num_features", ticker)
             input_features_length = len(result['input_features'])
             
             # Prepare data for insertion
