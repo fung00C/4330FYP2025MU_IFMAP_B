@@ -112,7 +112,6 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
             print(f"⭕️ Skipping index prediction, no new data since last prediction on {last_window_end_date}.")
             return
         """
-        
 
         # Get latest days(window size) of close and volume for ticker
         df = get_several_index_price([ticker], ['close', 'volume'], limit=window_size)
@@ -254,11 +253,6 @@ def run_stock_prediction_on_startup(tickers: List[str]):
 def run_stock_rank_on_startup(tickers: List[str]):
     try:
         temp_po = {}
-        #temp_po['ticker'] = [{}]
-        #temp_po['ticker']['potential'] = ""
-
-        temp_rn = {}
-        #temp_rn['ticker']['rank_number'] = ""
         for ticker in tickers:
             potential = calculate_stock_potensoial(ticker)
             print(f"potential: {potential}")
@@ -290,27 +284,5 @@ def run_stock_rank_on_startup(tickers: List[str]):
 
             print(f"📈 stock {ticker} Potential result on startup:")
             print(f"Potential: {potential}%")
-
-        """ # backup
-        for ticker in tickers:
-            # Data post-processing
-            sector = get_sector_stock_category(ticker)
-            industry = get_industry_stock_category(ticker)
-            current_price = get_several_stock_price([ticker], ['close'], limit=1)['close'][0]
-            potential = calculate_stock_potensoial(ticker)
-
-            # Prepare data for insertion
-            data = {}
-            data['ticker'] = ticker
-            data['sector'] = sector
-            data['industry'] = industry
-            data['current_price'] = current_price
-            data['potential'] = potential
-
-            # Insert data into stock_rank table
-            save_stock_rank(data, ticker)
-
-            print(f"📈 stock {ticker} Potential result on startup:")
-            print(f"Potential: {potential}%")"""
     except Exception as e:
         print(f"❌ Error during startup stock ranking: {e}")

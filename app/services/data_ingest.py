@@ -19,7 +19,7 @@ from app.repositories.meta import get_ticker_symbols
 logger = logging.getLogger(__name__)
 
 # Save index data into financial.db
-def save_index_data(ticker: str = "^GSPC", start_date: str = "2015-01-01", end_date: str = "2025-10-01"): # None
+def save_index_data(ticker: str = "^GSPC", start_date: str = "2015-01-01", end_date: str = "2025-10-01"): 
     failed_tickers = []  # track failed tickers
     try:
         data = download_index(ticker=ticker, start_date=start_date, end_date=end_date)
@@ -37,7 +37,7 @@ def save_index_data(ticker: str = "^GSPC", start_date: str = "2015-01-01", end_d
         return {"success": False, "error": str(e)}
 
 # Save stock data into financial.db
-def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date: str = "2025-10-01"): # None
+def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date: str = "2025-10-01"): 
     failed_tickers = []  # track failed tickers
     try:
         all_data = download_stocks(tickers=tickers, start_date=start_date, end_date=end_date)
@@ -51,7 +51,7 @@ def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date
                 print(f"⭕️ Skipping {ticker} due to error: {ticker_error}")
         if failed_tickers:
             print(f"⚠️ Failed tickers: {failed_tickers}. Check if they are delisted or invalid.")
-            refresh_tickers_list(failed_tickers) #TODO
+            refresh_tickers_list(failed_tickers)
         return {"success": True, "failed tickers": failed_tickers}
     except Exception as e:
         print(f"❌ An error occurred during download: {e}")

@@ -233,10 +233,6 @@ def get_predictions_last_updated() -> str:
     return _predictions_last_updated
 
 def set_model_params(timesteps, num_features, total_inputs, symbol: str) -> None:
-    """global _timesteps, _num_features, _total_inputs
-    _timesteps = timesteps
-    _num_features = num_features
-    _total_inputs = total_inputs"""
     global _timesteps, _num_features, _total_inputs
     _timesteps[symbol] = timesteps
     _num_features[symbol] = num_features
@@ -254,8 +250,6 @@ def get_model_params(arg, symbol: str) -> Optional[str]:
             return None
         
 def set_model(model_instance, symbol: str) -> None:
-    """global _model
-    _model = model_instance"""
     global _model
     _model[symbol] = model_instance
 

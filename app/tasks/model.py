@@ -38,8 +38,7 @@ def load_model():
         print("✅ ML model for ^GSPC loaded successfully.")
         set_model(model, "^GSPC")
         add_model_params(model, "^GSPC")
-        print(get_tickers())
-        for symbol in get_tickers(): # ['AAPL', 'MSFT', 'GOOGL']
+        for symbol in get_tickers():
             model = tf.keras.models.load_model(f'../4330FYP2025MU_IFMAP_B/models/{symbol}_model.h5')
             print(f"✅ ML model for {symbol} loaded successfully.")
             set_model(model, symbol)
