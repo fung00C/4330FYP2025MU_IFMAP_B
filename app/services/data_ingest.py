@@ -13,7 +13,7 @@ from app.services.data_clean import clean_index_df, clean_stock_panel
 from app.services.data_refresh import refresh_tickers_list
 from app.utils.file import open_sql_file
 from app.utils.pandas_helper import append_df
-from app.utils.app_state import DROP_STOCK_LIST, get_fin_db, get_sql_path, set_tickers
+from app.utils.app_state import DROP_STOCK_LIST, get_fin_db, get_sql_path, get_tickers, set_tickers
 from app.repositories.meta import get_ticker_symbols
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,6 @@ def save_index_data(ticker: str = "^GSPC", start_date: str = "2015-01-01", end_d
 
 # Save stock data into financial.db
 def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date: str = "2025-10-01"): 
-    failed_tickers = []  # track failed tickers
     try:
         all_data = download_stocks(tickers=tickers, start_date=start_date, end_date=end_date)
         cleaned = clean_stock_panel(all_data, tickers)
@@ -47,12 +46,8 @@ def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date
                 append_df(ticker, df, table="stock_price", conn=get_fin_db())
                 print(f"✅ Data for {ticker} fetched and stored successfully | Saved {len(df)} rows for {ticker}")
             except Exception as ticker_error:
-                failed_tickers.append(ticker)
                 print(f"⭕️ Skipping {ticker} due to error: {ticker_error}")
-        if failed_tickers:
-            print(f"⚠️ Failed tickers: {failed_tickers}. Check if they are delisted or invalid.")
-            refresh_tickers_list(failed_tickers)
-        return {"success": True, "failed tickers": failed_tickers}
+        return {"success": True, "tickers had been saved": get_tickers()}
     except Exception as e:
         print(f"❌ An error occurred during download: {e}")
         return {"success": False, "error": str(e)}

@@ -42,15 +42,12 @@ def run_index_statistics_on_startup(ticker: str = "^GSPC"):
     try:
         last_index_date = get_last_date_index_price()
         last_days200_end_date = get_last_index_days200_end_date()
-
         """
         # Skip prediction if no new data since last prediction
         if last_index_date == last_days200_end_date:
             print(f"⭕️ Skipping index statistics, no new data since last statistics on {last_days200_end_date}.")
             return
         """
-        
-
         # Data post-processing
         days200_start_date = get_any_date_index_price(ticker, 200)
         days200_end_date = get_last_date_index_price()
@@ -82,7 +79,6 @@ def run_stock_statistics_on_startup(tickers: List[str]):
                 continue
             """
             
-            
             # Data post-processing
             days200_start_date = get_any_date_stock_price(ticker, 200)
             days200_end_date = get_last_date_stock_price()
@@ -105,14 +101,12 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         last_window_end_date = get_last_index_window_end_date()
         window_size = get_model_params("timesteps", ticker)
         last_days200_ma = get_several_index_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
-
         """
         # Skip prediction if no new data since last prediction
         if last_index_date == last_window_end_date:
             print(f"⭕️ Skipping index prediction, no new data since last prediction on {last_window_end_date}.")
             return
         """
-
         # Get latest days(window size) of close and volume for ticker
         df = get_several_index_price([ticker], ['close', 'volume'], limit=window_size)
 
@@ -183,7 +177,6 @@ def run_stock_prediction_on_startup(tickers: List[str]):
                 print(f"⭕️ Skipping stock prediction, no new data since last prediction on {last_window_end_date}.")
                 continue
             """
-            
             # Get latest days(window size) of close and volume for ticker
             df = get_several_stock_price([ticker], ['close', 'volume'], limit=window_size)
 

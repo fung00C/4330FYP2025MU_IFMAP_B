@@ -72,9 +72,11 @@ _statistics_last_updated: str = ""
 # predictions cache
 _predictions_last_updated: str = ""
 
-# model
-#_model: Optional[any] = None
+# model cache
 _model: Optional[any] = {}
+
+# failed tickers during data ingest, used for refreshing ticker list
+_failed_tickers = []
 
 # model variables
 _input_shape = None
@@ -255,3 +257,11 @@ def set_model(model_instance, symbol: str) -> None:
 
 def get_model(symbol: str):
     return _model.get(symbol)
+
+def set_failed_tickers(tickers: List[str]) -> None:
+    global _failed_tickers
+    _failed_tickers = tickers
+
+def get_failed_tickers() -> List[str]:
+    global _failed_tickers
+    return _failed_tickers

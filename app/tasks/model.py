@@ -34,7 +34,7 @@ def add_model_params(model: tf.keras.Model, symbol: str):
 def load_model():
     # Load the Keras .h5 model
     try:
-        model = tf.keras.models.load_model('../4330FYP2025MU_IFMAP_B/models/pre_sp500_model2.h5')
+        model = tf.keras.models.load_model('../4330FYP2025MU_IFMAP_B/models/SP500_model.h5')
         print("✅ ML model for ^GSPC loaded successfully.")
         set_model(model, "^GSPC")
         add_model_params(model, "^GSPC")
