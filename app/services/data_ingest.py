@@ -7,7 +7,8 @@ import sqlite3
 from typing import Dict, List
 from datetime import datetime
 
-from app.repositories.stocks import get_stock_category
+from app.repositories.indexes import get_last_date_index_price
+from app.repositories.stocks import get_last_date_stock_price, get_stock_category
 from app.services.yahoo_client import download_index, download_stocks
 from app.services.data_clean import clean_index_df, clean_stock_panel
 from app.services.data_refresh import refresh_tickers_list
@@ -117,7 +118,8 @@ def save_index_statistics(data: List[any], ticker: str):
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_index_statistics_data"))
         statistics_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute(sql_template, (data["ticker"], statistics_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
+        record_date = get_last_date_index_price()
+        cursor.execute(sql_template, (statistics_date, data["ticker"], record_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
         db.commit()
         print(f"✅ Index {ticker} statistics saved successfully.")
         return True
@@ -126,13 +128,14 @@ def save_index_statistics(data: List[any], ticker: str):
         return False
     
 # Save stock statistics into financial.db
-def save_stock_statistics(data: Dict[str, str], ticker: str):#
+def save_stock_statistics(data: Dict[str, str], ticker: str):
     try:
         db = get_fin_db()
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_stock_statistics_data"))
         statistics_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute(sql_template, (data["ticker"], statistics_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
+        record_date = get_last_date_stock_price()
+        cursor.execute(sql_template, (statistics_date, data["ticker"], record_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
         db.commit()
         print(f"✅ Stock {ticker} statistics saved successfully.")
         return True
@@ -146,7 +149,8 @@ def save_stock_rank(data: List[any], ticker: str):
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_stock_rank_data"))
         rank_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute(sql_template, (rank_date, data["ticker"], data["sector"], data["industry"], data["current_price"], data["potential"]))
+        record_date = get_last_date_stock_price()
+        cursor.execute(sql_template, (rank_date, data["ticker"], record_date, data["sector"], data["industry"], data["current_price"], data["potential"]))
         db.commit()
         print(f"✅ Stock {ticker} rank data saved successfully.")
         return True

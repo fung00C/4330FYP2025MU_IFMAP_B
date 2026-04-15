@@ -27,10 +27,20 @@ async def update_financial_data_job(arg:str = "schedule"):
     if get_tickers():
         if index_start_date != end_date:
             await asyncio.to_thread(save_index_data, start_date=index_start_date, end_date=end_date)
+            # await asyncio.to_thread(save_index_statistics, data={}, ticker="^GSPC")
+            # await asyncio.to_thread(save_index_predictions, data={}, ticker="^GSPC")
+            await asyncio.to_thread(run_index_statistics_on_startup)
+            await asyncio.to_thread(run_index_prediction_on_startup)
         else:
             print("⭕️ The index data is up to date in the financial database")
         if stock_start_date != end_date:
             await asyncio.to_thread(save_stock_data, get_tickers(), start_date=stock_start_date, end_date=end_date) # download and save in a thread to avoid blocking the event loop
+            # await asyncio.to_thread(save_stock_statistics, data={}, ticker="^GSPC")
+            # await asyncio.to_thread(save_stock_predictions, data={}, ticker="^GSPC")
+            # await asyncio.to_thread(save_stock_rank, data={}, ticker=get_tickers()) 
+            await asyncio.to_thread(run_stock_statistics_on_startup, get_tickers())
+            await asyncio.to_thread(run_stock_prediction_on_startup, get_tickers()) 
+            await asyncio.to_thread(run_stock_rank_on_startup, get_tickers())
         else:
             print("⭕️ The stock data is up to date in the financial database")
     else:
@@ -168,7 +178,6 @@ def run_stock_prediction_on_startup(tickers: List[str]):
         for ticker in tickers:
             last_stock_date = get_last_date_stock_price()
             last_window_end_date = get_last_stock_window_end_date()
-            print(f"ticker --> {ticker}")
             window_size = get_model_params("timesteps", ticker)
             last_days200_ma = get_several_stock_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
             """

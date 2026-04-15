@@ -3,8 +3,9 @@
 INSERT INTO stock_rank (
     timestamp,
     symbol,
+    record_date,
     sector,
     industry,
     current_price,
     potential)
-VALUES (?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?);
