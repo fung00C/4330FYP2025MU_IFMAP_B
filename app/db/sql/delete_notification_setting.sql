@@ -1,0 +1,1 @@
+delete from notification_setting where email = ?;

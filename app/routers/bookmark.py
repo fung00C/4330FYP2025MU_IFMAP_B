@@ -126,6 +126,41 @@ async def api_update_notification_setting(
 
 
 
+@router.post("/add_notification_setting")
+async def api_add_notification_setting(
+    email: str,
+    frequency: str,
+    day_of_week: str = None,
+    date_of_month: int = None,
+    time_of_day: str = None
+):
+    sql = open_sql_file(get_sql_path("insert_notification_setting"))
+    params = (email, frequency, day_of_week, date_of_month, time_of_day)
+    con = get_user_db()
+    try:
+        con.execute(sql, params)
+        con.commit()
+        return {"message": f"Notification setting added for user {email}"}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/delete_notification_setting")
+async def api_delete_notification_setting(
+    email: str,
+):
+    sql = open_sql_file(get_sql_path("delete_notification_setting"))
+    params = (email,)
+    con = get_user_db()
+    try:
+        con.execute(sql, params)
+        con.commit()
+        return {"message": f"Notification setting deleted for user {email}"}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))   
 """
 router = APIRouter()
 
