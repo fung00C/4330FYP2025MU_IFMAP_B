@@ -1,5 +1,6 @@
 
 INSERT INTO bookmark (
     email,
-    stock_symbol
-) VALUES (?, ?);
+    stock_symbol,
+    notify
+) VALUES (?, ?, false);

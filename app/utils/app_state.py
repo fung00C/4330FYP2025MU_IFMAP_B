@@ -56,6 +56,10 @@ sql_file_insert_stock_rank_data = 'app/db/sql/insert_stock_rank_data.sql'
 sql_file_insert_bookmark = 'app/db/sql/insert_bookmark.sql'
 sql_file_delete_bookmark = 'app/db/sql/delete_bookmark.sql'
 sql_file_select_bookmark = 'app/db/sql/select_bookmark.sql'
+sql_file_create_notification_setting_table = 'app/db/sql/create_notification_setting_table.sql'
+sql_file_select_bookmark_notify = 'app/db/sql/select_bookmark_notify.sql'
+sql_file_update_bookmark_notify = 'app/db/sql/update_bookmark_notify.sql'
+sql_file_update_notification_setting = 'app/db/sql/update_notification_setting.sql'
 
 # database variables
 _fin_db: Optional[sqlite3.Connection] = None
@@ -179,6 +183,14 @@ def get_sql_path(arg) -> Optional[str]:
             return sql_file_insert_stock_statistics_data
         case 'insert_stock_rank_data':
             return sql_file_insert_stock_rank_data
+        case 'create_notification_setting_table':
+            return sql_file_create_notification_setting_table   
+        case 'select_bookmark_notify':
+            return sql_file_select_bookmark_notify
+        case 'update_bookmark_notify':
+            return sql_file_update_bookmark_notify
+        case 'update_notification_setting':
+            return sql_file_update_notification_setting
         case _:
             return None
 
