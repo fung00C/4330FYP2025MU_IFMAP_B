@@ -7,7 +7,8 @@ from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime
 from pydantic import BaseModel
 import bcrypt
-
+import logging
+logger = logging.getLogger("auth_logger")
 
 
 # Constants for JWT settings
@@ -40,7 +41,7 @@ async def get_user(token: str = Depends(oauth2_scheme), db: Session = Depends(ge
         user = db.query(User).filter(User.email == email).first()
         if user is None:
             raise HTTPException(status_code=404, detail="User not found")
-
+        logger.info("User profile accessed: %s", email)
         return {"email": user.email}
         
     except JWTError:
@@ -63,6 +64,7 @@ async def change_password(request: ChangePasswordRequest, token: str = Depends(o
         
         # Check if the old password is correct
         if not bcrypt.checkpw(request.old_password.encode('utf-8'), user.password.encode('utf-8')):
+            logger.warning("Password change failed: Incorrect old password for %s", email)
             raise HTTPException(status_code=400, detail="Old password is incorrect")
         
         # Hash the new password
@@ -70,6 +72,7 @@ async def change_password(request: ChangePasswordRequest, token: str = Depends(o
         user.password = hashed_new_password
         
         db.commit()
+        logger.info("Password changed successfully for user: %s", email)
         return {"message": "Password changed successfully"}
     
     except JWTError:
@@ -91,7 +94,7 @@ async def delete_user(token: str = Depends(oauth2_scheme), db: Session = Depends
 
         db.delete(user)  
         db.commit()  
-
+        logger.info("Account DELETED: %s", email)
         return {"message": "Account deleted successfully"}
     
     except JWTError:
