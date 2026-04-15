@@ -14,23 +14,25 @@ scaler_y = StandardScaler()
 # The Pydantic model defines the input format (e.g., a list of floating-point numbers for financial features such as stock price and trading volume).
 class PredictionInput(BaseModel):
     features: List[float] = Field(..., min_items=120, max_items=120) # Adjusted to 120 inputs (60 steps x 2 features); '...' means required
+class PredictionInput_stock(BaseModel):
+    features: List[float] = Field(..., min_items=180, max_items=180) # Adjusted to 180 inputs (60 steps x 3 features); '...' means required
 
 # Receive input features and perform model prediction.
-def predict(input_data: PredictionInput):
+def predict(input_data: PredictionInput, symbol: str):
     # Ensure the model is loaded
-    if get_model() is None:
+    if get_model(symbol) is None:
         raise HTTPException(status_code=500, detail="Model not loaded properly")
     
     # Check if the input length meets the model requirements.
-    if len(input_data.features) != get_model_params("total_inputs"):
-        raise HTTPException(status_code=400, detail=f"Features must be exactly {get_model_params('total_inputs')} values for {get_model_params('timesteps')} timesteps x {get_model_params('num_features')} features")
+    if len(input_data.features) != get_model_params("total_inputs", symbol):
+        raise HTTPException(status_code=400, detail=f"Features must be exactly {get_model_params('total_inputs', symbol)} values for {get_model_params('timesteps', symbol)} timesteps x {get_model_params('num_features', symbol)} features")
 
     # Reshape the flat list to (1, 60, 2); use `astype()` to ensure the data type matches the model.
-    input_array = np.array(input_data.features).reshape(1, get_model_params("timesteps"), get_model_params("num_features")).astype(np.float32)
+    input_array = np.array(input_data.features).reshape(1, get_model_params("timesteps", symbol), get_model_params("num_features", symbol)).astype(np.float32)
     print(f"Input array shape: {input_array.shape}, dtype: {input_array.dtype}")
     
     # Execute prediction (adjust for your model's output, e.g., a single value or probability)
-    prediction = get_model().predict(input_array, verbose=0)
+    prediction = get_model(symbol).predict(input_array, verbose=0)
     
     # Output processing (assuming a single regression output, adjust if multi-output)
     result = float(prediction[0])
@@ -41,8 +43,8 @@ def predict(input_data: PredictionInput):
         #"confidence": None  # The regression model lacks confidence.
     }
 
-# Standardize input data
-def standardize_data(closes: np.ndarray, volumes: np.ndarray):
+# Standardize index's input data
+def standardize_index_data(closes: np.ndarray, volumes: np.ndarray):
     # Prepare X, y
     X = np.hstack([closes, volumes]) # shape (60, 2) ; hstack to horizontally stack arrays
     y = closes # shape (60, 1)
@@ -57,6 +59,26 @@ def standardize_data(closes: np.ndarray, volumes: np.ndarray):
     # Check if enough data
     if len(features) != 120:
         print(f"⚠️ Features length {len(features)} != 120, skipping prediction")
+        return
+    
+    return features
+
+# Standardize stock's input data
+def standardize_stock_data(closes: np.ndarray, rsi: np.ndarray, sma50: np.ndarray):
+    # Prepare X, y
+    X = np.hstack([closes, rsi, sma50]) # shape (60, 3) ; hstack to horizontally stack arrays
+    y = closes # shape (60, 1)
+
+    # Standardize using StandardScaler
+    X_scaled = scaler_X.fit_transform(X)
+    y_scaled = scaler_y.fit_transform(y)
+
+    # Prepare features: [close1_scaled, rsi1_scaled, sma50_1_scaled, close2_scaled, rsi2_scaled, sma50_2_scaled, ..., close60_scaled, rsi60_scaled, sma50_60_scaled]
+    features = X_scaled.reshape(-1).tolist()
+
+    # Check if enough data
+    if len(features) != 180:
+        print(f"⚠️ Features length {len(features)} != 180, skipping prediction")
         return
     
     return features

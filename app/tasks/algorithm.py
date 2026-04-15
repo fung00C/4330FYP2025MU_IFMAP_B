@@ -1,6 +1,18 @@
 # app/tasks/technical_indicator.py
+import pandas as pd
 from app.repositories.indexes import get_range_index_close_price
 from app.repositories.stocks import get_several_stock_predictions, get_several_stock_price
+
+# Calculate Relative Strength Index (RSI) for a given price series and period
+def compute_rsi(series: pd.Series, period: int = 14):
+    delta = series.diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+    avg_gain = gain.rolling(period).mean()
+    avg_loss = loss.rolling(period).mean()
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
 
 # Calculate index moving average for given days
 def days_index_moving_average(ticker: str = "^GSPC", days: int = 0):

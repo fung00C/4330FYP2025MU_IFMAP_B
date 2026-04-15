@@ -5,8 +5,9 @@ import threading
 import time
 
 # index_piece and stock_price table column name
-ALLOWED_COLUMNS_IN_FINANCIAL = {"open","high","low","close","volume"}  # 白名單
+ALLOWED_COLUMNS_IN_FINANCIAL = {"open","high","low","close","volume"} 
 FIXED_COLUMNS_IN_FINANCIAL = ["symbol","date"]
+DROP_STOCK_LIST = ['AMTM', 'SOLV', 'GEV', 'VLTO'] # They are not enough data for training
 
 # SQL file paths
 sql_file_create_index_price_table = 'app/db/sql/create_index_price_table.sql'
@@ -71,14 +72,17 @@ _statistics_last_updated: str = ""
 # predictions cache
 _predictions_last_updated: str = ""
 
-# model
-_model: Optional[any] = None
+# model cache
+_model: Optional[any] = {}
+
+# failed tickers during data ingest, used for refreshing ticker list
+_failed_tickers = []
 
 # model variables
 _input_shape = None
-_timesteps = None
-_num_features = None
-_total_inputs = None
+_timesteps: dict[str, int] = {}
+_num_features: dict[str, int] = {}
+_total_inputs: dict[str, int] = {}
 _data_type = None
 
 def get_sql_path(arg) -> Optional[str]:
@@ -202,6 +206,8 @@ def set_tickers(tickers: List[str]) -> None:
     with _tickers_lock:
         # store a shallow copy to avoid external mutation
         _tickers = list(tickers) if tickers is not None else []
+        # Used in fyp demo only, when open this line remember to comment out the line above it, which is for production use.
+        #_tickers = ['A', 'AAPL', 'ABBV', 'ABNB', 'ABT', 'ACGL', 'ACN', 'ADBE', 'ADI', 'ADM', 'ADP', 'ADSK', 'AEE', 'AEP', 'AES', 'AFL', 'AIG', 'AIZ', 'AJG', 'AKAM', 'ALB', 'ALGN', 'ALL', 'ALLE', 'AMAT', 'AMCR', 'AMD', 'AME', 'AMGN', 'AMP', 'AMT', 'AMZN', 'ANET', 'AON', 'AOS', 'APA', 'APD', 'APH', 'APTV', 'ARE', 'ATO', 'AVB', 'AVGO', 'AVY', 'GOOGL', 'MSFT', 'TSLA']
         _tickers_last_updated = time.time()
 
 def get_tickers() -> List[str]:
@@ -230,26 +236,34 @@ def set_predictions_last_updated(timestamp: str) -> None:
 def get_predictions_last_updated() -> str:
     return _predictions_last_updated
 
-def set_model_params(timesteps, num_features, total_inputs) -> None:
+def set_model_params(timesteps, num_features, total_inputs, symbol: str) -> None:
     global _timesteps, _num_features, _total_inputs
-    _timesteps = timesteps
-    _num_features = num_features
-    _total_inputs = total_inputs
+    _timesteps[symbol] = timesteps
+    _num_features[symbol] = num_features
+    _total_inputs[symbol] = total_inputs
 
-def get_model_params(arg) -> Optional[str]:
+def get_model_params(arg, symbol: str) -> Optional[str]:
     match arg:
         case 'timesteps':
-            return _timesteps
+            return _timesteps.get(symbol)
         case 'num_features':
-            return _num_features
+            return _num_features.get(symbol)
         case 'total_inputs':
-            return _total_inputs
+            return _total_inputs.get(symbol)
         case _:
             return None
         
-def set_model(model_instance) -> None:
+def set_model(model_instance, symbol: str) -> None:
     global _model
-    _model = model_instance
+    _model[symbol] = model_instance
 
-def get_model():
-    return _model
+def get_model(symbol: str):
+    return _model.get(symbol)
+
+def set_failed_tickers(tickers: List[str]) -> None:
+    global _failed_tickers
+    _failed_tickers = tickers
+
+def get_failed_tickers() -> List[str]:
+    global _failed_tickers
+    return _failed_tickers

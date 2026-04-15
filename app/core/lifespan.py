@@ -25,16 +25,17 @@ async def init_data_async(app: FastAPI):
     await asyncio.to_thread(create_table, get_fin_db(), "stock_rank", open_sql_file(get_sql_path("create_stock_rank_table")))
     await asyncio.to_thread(create_table, get_user_db(), "user", open_sql_file(get_sql_path("create_user_table")))
     await asyncio.to_thread(store_ticker_symbols, app) 
-    
+
     await asyncio.to_thread(save_stock_data, get_tickers())
     await asyncio.to_thread(save_index_data)
+
+    await asyncio.to_thread(load_model) # load ML model and set parameters
+
     await asyncio.to_thread(run_index_statistics_on_startup)
     await asyncio.to_thread(run_stock_statistics_on_startup, get_tickers())
     await asyncio.to_thread(run_index_prediction_on_startup)
-    await asyncio.to_thread(run_stock_prediction_on_startup, get_tickers()) # TODO: all tickers ['AAPL', 'MSFT', 'GOOGL']
-    await asyncio.to_thread(run_stock_rank_on_startup, get_tickers()) # TODO: all tickers ['AAPL', 'MSFT', 'GOOGL']
-    
-    
+    await asyncio.to_thread(run_stock_prediction_on_startup, get_tickers()) 
+    await asyncio.to_thread(run_stock_rank_on_startup, get_tickers())
     
 # Lifespan context manager for FastAPI app
 @asynccontextmanager
@@ -51,9 +52,6 @@ async def lifespan(app: FastAPI):
         print("✅ Both database connections established.")
     else:
         print("⚠️ Warning: One or both DB connections failed.")
-
-    # load ML model and set parameters
-    load_model()
 
     # initalize data run in background
     asyncio.create_task(init_data_async(app))
