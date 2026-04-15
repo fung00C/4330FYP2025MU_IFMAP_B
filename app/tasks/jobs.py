@@ -7,9 +7,9 @@ from datetime import datetime
 from app.services.data_ingest import save_index_statistics, save_stock_data, save_index_data, save_stock_predictions, save_stock_rank, save_stock_statistics
 from app.repositories.indexes import get_any_date_index_price, get_last_index_days200_end_date, get_several_index_statistics, select_index_start_date, get_last_date_index_price, get_several_index_price, get_last_index_window_end_date
 from app.repositories.stocks import get_any_date_stock_price, get_industry_stock_category, get_last_date_stock_price, get_last_stock_days200_end_date, get_last_stock_window_end_date, get_sector_stock_category, get_several_stock_price, get_several_stock_statistics, select_stock_start_date
-from app.tasks.algorithm import calculate_stock_potensoial, days_index_moving_average, days_stock_moving_average
+from app.tasks.algorithm import calculate_stock_potensoial, days_index_moving_average, days_stock_moving_average, compute_rsi
 from app.utils.app_state import get_tickers, get_model_params
-from app.tasks.predictions import destandardize_data, predict, standardize_data, PredictionInput
+from app.tasks.predictions import destandardize_data, predict, standardize_index_data, standardize_stock_data, PredictionInput, PredictionInput_stock
 from app.services.data_ingest import save_index_predictions
 
 # update stock data job for scheduler of daily updates
@@ -27,10 +27,20 @@ async def update_financial_data_job(arg:str = "schedule"):
     if get_tickers():
         if index_start_date != end_date:
             await asyncio.to_thread(save_index_data, start_date=index_start_date, end_date=end_date)
+            # await asyncio.to_thread(save_index_statistics, data={}, ticker="^GSPC")
+            # await asyncio.to_thread(save_index_predictions, data={}, ticker="^GSPC")
+            await asyncio.to_thread(run_index_statistics_on_startup)
+            await asyncio.to_thread(run_index_prediction_on_startup)
         else:
             print("⭕️ The index data is up to date in the financial database")
         if stock_start_date != end_date:
             await asyncio.to_thread(save_stock_data, get_tickers(), start_date=stock_start_date, end_date=end_date) # download and save in a thread to avoid blocking the event loop
+            # await asyncio.to_thread(save_stock_statistics, data={}, ticker="^GSPC")
+            # await asyncio.to_thread(save_stock_predictions, data={}, ticker="^GSPC")
+            # await asyncio.to_thread(save_stock_rank, data={}, ticker=get_tickers()) 
+            await asyncio.to_thread(run_stock_statistics_on_startup, get_tickers())
+            await asyncio.to_thread(run_stock_prediction_on_startup, get_tickers()) 
+            await asyncio.to_thread(run_stock_rank_on_startup, get_tickers())
         else:
             print("⭕️ The stock data is up to date in the financial database")
     else:
@@ -42,15 +52,12 @@ def run_index_statistics_on_startup(ticker: str = "^GSPC"):
     try:
         last_index_date = get_last_date_index_price()
         last_days200_end_date = get_last_index_days200_end_date()
-
         """
         # Skip prediction if no new data since last prediction
         if last_index_date == last_days200_end_date:
             print(f"⭕️ Skipping index statistics, no new data since last statistics on {last_days200_end_date}.")
             return
         """
-        
-
         # Data post-processing
         days200_start_date = get_any_date_index_price(ticker, 200)
         days200_end_date = get_last_date_index_price()
@@ -82,7 +89,6 @@ def run_stock_statistics_on_startup(tickers: List[str]):
                 continue
             """
             
-            
             # Data post-processing
             days200_start_date = get_any_date_stock_price(ticker, 200)
             days200_end_date = get_last_date_stock_price()
@@ -103,17 +109,14 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
     try:
         last_index_date = get_last_date_index_price()
         last_window_end_date = get_last_index_window_end_date()
-        window_size = get_model_params("timesteps")
+        window_size = get_model_params("timesteps", ticker)
         last_days200_ma = get_several_index_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
-
         """
         # Skip prediction if no new data since last prediction
         if last_index_date == last_window_end_date:
             print(f"⭕️ Skipping index prediction, no new data since last prediction on {last_window_end_date}.")
             return
         """
-        
-
         # Get latest days(window size) of close and volume for ticker
         df = get_several_index_price([ticker], ['close', 'volume'], limit=window_size)
 
@@ -127,13 +130,13 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         volumes = df['volume'].values.astype(float).reshape(-1, 1)
 
         # Standardize data
-        features = standardize_data(closes, volumes)
+        features = standardize_index_data(closes, volumes)
 
         # Create PredictionInput
         input_data = PredictionInput(features=features)
 
         # Run prediction
-        result = predict(input_data)
+        result = predict(input_data, "^GSPC")
         
         # Data post-processing
         window_start_date = get_any_date_index_price(ticker, window_size)
@@ -142,7 +145,7 @@ def run_index_prediction_on_startup(ticker: str = "^GSPC"):
         predicted_real = destandardize_data(predicted_scaled) # Destandardize predicted value
         last_actual_close = closes[-1, 0]
         recommendation = "BUY" if predicted_real >= last_days200_ma['days200_ma'][0] else "SELL"
-        feature_number = get_model_params("num_features")
+        feature_number = get_model_params("num_features", ticker)
         input_features_length = len(result['input_features'])
         
         # Prepare data for insertion
@@ -175,7 +178,7 @@ def run_stock_prediction_on_startup(tickers: List[str]):
         for ticker in tickers:
             last_stock_date = get_last_date_stock_price()
             last_window_end_date = get_last_stock_window_end_date()
-            window_size = get_model_params("timesteps")
+            window_size = get_model_params("timesteps", ticker)
             last_days200_ma = get_several_stock_statistics(symbols=[ticker], columns=['days200_ma'], limit=1)
             """
             # Skip prediction if no new data since last prediction
@@ -183,31 +186,36 @@ def run_stock_prediction_on_startup(tickers: List[str]):
                 print(f"⭕️ Skipping stock prediction, no new data since last prediction on {last_window_end_date}.")
                 continue
             """
-            
-
             # Get latest days(window size) of close and volume for ticker
             df = get_several_stock_price([ticker], ['close', 'volume'], limit=window_size)
 
-            
             # Check data sufficiency
             if df.empty or len(df) < int(window_size):
                 print(f"⚠️ Not enough stock data {ticker} for prediction (need {window_size} days)")
                 continue
             
-            
-            
             # Prepare standardized features
             closes = df['close'].values.astype(float).reshape(-1, 1)
-            volumes = df['volume'].values.astype(float).reshape(-1, 1)
-
+            rsi = compute_rsi(df['close'], period=14).fillna(0).to_numpy().astype(float).reshape(-1, 1)
+            sma50 = df['close'].rolling(50).mean().fillna(0).to_numpy().astype(float).reshape(-1, 1)
+            
             # Standardize data
-            features = standardize_data(closes, volumes)
+            features = standardize_stock_data(closes, rsi, sma50)
 
-            # Create PredictionInput
-            input_data = PredictionInput(features=features)
+            # Check if features are valid
+            if features is None or not isinstance(features, (list, np.ndarray)) or len(features) == 0:
+                print(f"⚠️ Features for {ticker} are invalid or empty. Skipping prediction.")
+                return
+
+            # Ensure features is a list
+            if isinstance(features, np.ndarray):
+                features = features.tolist()
+
+            # Create PredictionInput_stock
+            input_data = PredictionInput_stock(features=features)
 
             # Run prediction
-            result = predict(input_data)
+            result = predict(input_data, ticker)
             
             # Data post-processing
             window_start_date = get_any_date_stock_price(ticker, window_size)
@@ -216,7 +224,7 @@ def run_stock_prediction_on_startup(tickers: List[str]):
             predicted_real = destandardize_data(predicted_scaled) # Destandardize predicted value
             last_actual_close = closes[-1, 0]
             recommendation = "BUY" if predicted_real >= last_days200_ma['days200_ma'][0] else "SELL"
-            feature_number = get_model_params("num_features")
+            feature_number = get_model_params("num_features", ticker)
             input_features_length = len(result['input_features'])
             
             # Prepare data for insertion
@@ -247,11 +255,6 @@ def run_stock_prediction_on_startup(tickers: List[str]):
 def run_stock_rank_on_startup(tickers: List[str]):
     try:
         temp_po = {}
-        #temp_po['ticker'] = [{}]
-        #temp_po['ticker']['potential'] = ""
-
-        temp_rn = {}
-        #temp_rn['ticker']['rank_number'] = ""
         for ticker in tickers:
             potential = calculate_stock_potensoial(ticker)
             print(f"potential: {potential}")
@@ -283,27 +286,5 @@ def run_stock_rank_on_startup(tickers: List[str]):
 
             print(f"📈 stock {ticker} Potential result on startup:")
             print(f"Potential: {potential}%")
-
-        """ # backup
-        for ticker in tickers:
-            # Data post-processing
-            sector = get_sector_stock_category(ticker)
-            industry = get_industry_stock_category(ticker)
-            current_price = get_several_stock_price([ticker], ['close'], limit=1)['close'][0]
-            potential = calculate_stock_potensoial(ticker)
-
-            # Prepare data for insertion
-            data = {}
-            data['ticker'] = ticker
-            data['sector'] = sector
-            data['industry'] = industry
-            data['current_price'] = current_price
-            data['potential'] = potential
-
-            # Insert data into stock_rank table
-            save_stock_rank(data, ticker)
-
-            print(f"📈 stock {ticker} Potential result on startup:")
-            print(f"Potential: {potential}%")"""
     except Exception as e:
         print(f"❌ Error during startup stock ranking: {e}")

@@ -13,7 +13,7 @@ async def api_get_stock_rank(
     Get a specific stock recommendation data
     """
     try:
-        # 輸入驗證
+        # Validate input parameters
         if not symbol:
             raise HTTPException(status_code=404, detail=f"symbols must not be empty")
         df = get_serveral_stock_rank(symbols=symbol, columns=['symbol', 'industry', 'current_price', 'potential'], limit=1)

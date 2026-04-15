@@ -47,8 +47,7 @@ def get_index_all_price(symbols: List[str], start_date: Optional[str] = None, en
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params) # 用 pd.read_sql_query(sql, conn, params=params) 直接回傳 DataFrame
         if df.empty:
-            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(index price).")
-            print(f"No data found for requested symbols {symbols} in table(index price).")
+            print(f"⚠️ No data found for requested symbols {symbols} in table(index price).")
         print(f"✅ Retrieved {len(df)} rows for {symbols} in table(index price)")
         return df
     except Exception as e:
@@ -90,8 +89,7 @@ def get_several_index_price(symbols: List[str], columns: List[str], start_date: 
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)  # 只綁值，不綁欄位名
         if df.empty:
-            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(index price).")
-            print(f"No data found for requested symbols {symbols} in table(index price).")
+            print(f"⚠️ No data found for requested symbols {symbols} in table(index price).")
         print(f"✅ Retrieved {len(df)} rows of prices({columns}) for {symbols} in table(index price)")
         return df
     except Exception as e:
@@ -135,8 +133,7 @@ def get_several_index_statistics(symbols: List[str], columns: List[str], start_d
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
         if df.empty:
-            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(index statistics).")
-            print(f"No data found for requested symbols {symbols} in table(index statistics).")
+            print(f"⚠️ No data found for requested symbols {symbols} in table(index statistics).")
         print(f"✅ Retrieved {len(df)} rows for {symbols} in table(index statistics)")
         return df
     except Exception as e:
@@ -180,8 +177,7 @@ def get_several_index_predictions(symbols: List[str], columns: List[str], start_
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
         if df.empty:
-            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(index predictions).")
-            print(f"No data found for requested symbols {symbols} in table(index predictions).")
+            print(f"⚠️ No data found for requested symbols {symbols} in table(index predictions).")
         print(f"✅ Retrieved {len(df)} rows for {symbols} in table(index predictions)")
         return df
     except Exception as e:

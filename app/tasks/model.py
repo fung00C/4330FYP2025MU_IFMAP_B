@@ -2,18 +2,9 @@
 
 import tensorflow as tf
 
-from app.utils.app_state import set_model, set_model_params
+from app.utils.app_state import set_model, set_model_params, get_tickers
 
-def load_model():
-    # Load the Keras .h5 model
-    try:
-        model = tf.keras.models.load_model('../4330FYP2025MU_IFMAP_B/models/pre_sp500_model2.h5')
-        print("✅ ML model loaded successfully.")
-        set_model(model)
-    except Exception as e:
-        print(f"❌ Error loading ML model: {e}")
-        model = None
-
+def add_model_params(model: tf.keras.Model, symbol: str):
     # Check the input shape (feature count is shape[-1], exclude batches).
     input_shape = model.input_shape
     print("Input shape:", input_shape)
@@ -38,4 +29,21 @@ def load_model():
     model.summary()
 
     # Set model parameters in app state
-    set_model_params(timesteps, num_features, total_inputs)
+    set_model_params(timesteps, num_features, total_inputs, symbol)
+
+def load_model():
+    # Load the Keras .h5 model
+    try:
+        model = tf.keras.models.load_model('../4330FYP2025MU_IFMAP_B/models/SP500_model.h5')
+        print("✅ ML model for ^GSPC loaded successfully.")
+        set_model(model, "^GSPC")
+        add_model_params(model, "^GSPC")
+        for symbol in get_tickers():
+            model = tf.keras.models.load_model(f'../4330FYP2025MU_IFMAP_B/models/{symbol}_model.h5')
+            print(f"✅ ML model for {symbol} loaded successfully.")
+            set_model(model, symbol)
+            add_model_params(model, symbol)
+    except Exception as e:
+        print(f"❌ Error loading ML model: {e}")
+        model = None
+

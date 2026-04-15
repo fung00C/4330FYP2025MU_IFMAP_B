@@ -32,7 +32,7 @@ def get_serveral_stock_rank(symbols: List[str], columns: List[str], limit: Optio
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
         if df.empty:
-            print(f"No data found for requested symbols {symbols} in table(stock rank).")
+            print(f"⚠️ No data found for requested symbols {symbols} in table(stock rank).")
         print(f"✅ Retrieved {len(df)} rows for {symbols} in table(stock rank)")
         return df
     except Exception as e:
@@ -72,15 +72,14 @@ def get_stock_all_price(symbols: List[str], start_date: Optional[str] = None, en
         sql_template = sql_template.replace("/*DATE_END_COND*/", "")
     if limit:
         sql_template = sql_template.replace("/*DATA_LIMIT*/", "LIMIT ?")
-        params.append(limit) # LIMIT 放在模板最後一個 ?，加入參數
+        params.append(limit) 
     else:
         sql_template = sql_template.replace("/*DATA_LIMIT*/", "")
 
     try:
-        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params) # 用 pd.read_sql_query(sql, conn, params=params) 直接回傳 DataFrame
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params) 
         if df.empty:
-            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock price).")
-            print(f"No data found for requested symbols {symbols} in table(stock price).")
+            print(f"⚠️ No data found for requested symbols {symbols} in table(stock price).")
         print(f"✅ Retrieved {len(df)} rows for {symbols} in table(stock price)")
         return df
     except Exception as e:
@@ -99,9 +98,9 @@ def get_several_stock_price(symbols: List[str], columns: List[str], start_date: 
     :return: 查詢結果 DataFrame
     """
     sql_template = open_sql_file(get_sql_path('select_several_stock_price'))
-    select_cols = ", ".join(FIXED_COLUMNS_IN_FINANCIAL + columns)  # 以字串插入識別字（不能用參數化）
+    select_cols = ", ".join(FIXED_COLUMNS_IN_FINANCIAL + columns)  
     sql_template = sql_template.replace("/*SELECT_COLUMNS*/", select_cols)
-    placeholders = ",".join(["?"] * len(symbols)) # 值條件一律參數化
+    placeholders = ",".join(["?"] * len(symbols)) 
     sql_template = sql_template.replace("/*SYMBOL_IN_CLAUSE*/", f"AND symbol IN ({placeholders})")
     params: List[object] = list(symbols)
     if start_date:
@@ -120,10 +119,9 @@ def get_several_stock_price(symbols: List[str], columns: List[str], start_date: 
     else:
         sql_template = sql_template.replace("/*DATA_LIMIT*/", "")
     try:
-        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)  # 只綁值，不綁欄位名
+        df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)  
         if df.empty:
-            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock price).")
-            print(f"No data found for requested symbols {symbols} in table(stock price).")
+            print(f"⚠️ No data found for requested symbols {symbols} in table(stock price).")
         print(f"✅ Retrieved {len(df)} rows of prices({columns}) for {symbols} in table(stock price)")
         return df
     except Exception as e:
@@ -167,8 +165,7 @@ def get_several_stock_statistics(symbols: List[str], columns: List[str], start_d
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
         if df.empty:
-            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock statistics).")
-            print(f"No data found for requested symbols {symbols} in table(stock statistics).")
+            print(f"⚠️ No data found for requested symbols {symbols} in table(stock statistics).")
         print(f"✅ Retrieved {len(df)} rows for {symbols} in table(stock statistics)")
         return df
     except Exception as e:
@@ -212,8 +209,7 @@ def get_several_stock_predictions(symbols: List[str], columns: List[str], start_
     try:
         df = pd.read_sql_query(sql=sql_template, con=get_fin_db(), params=params)
         if df.empty:
-            #raise HTTPException(status_code=404, detail=f"No data found for requested symbols {symbols} in table(stock predictions).")
-            print(f"No data found for requested symbols {symbols} in table(stock predictions).")
+            print(f"⚠️ No data found for requested symbols {symbols} in table(stock predictions).")
             return None
         print(f"✅ Retrieved {len(df)} rows for {symbols} in table(stock predictions)")
         return df

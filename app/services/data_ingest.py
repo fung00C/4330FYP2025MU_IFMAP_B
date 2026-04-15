@@ -7,19 +7,20 @@ import sqlite3
 from typing import Dict, List
 from datetime import datetime
 
-from app.repositories.stocks import get_stock_category
+from app.repositories.indexes import get_last_date_index_price
+from app.repositories.stocks import get_last_date_stock_price, get_stock_category
 from app.services.yahoo_client import download_index, download_stocks
 from app.services.data_clean import clean_index_df, clean_stock_panel
 from app.services.data_refresh import refresh_tickers_list
 from app.utils.file import open_sql_file
 from app.utils.pandas_helper import append_df
-from app.utils.app_state import get_fin_db, get_sql_path, set_tickers
+from app.utils.app_state import DROP_STOCK_LIST, get_fin_db, get_sql_path, get_tickers, set_tickers
 from app.repositories.meta import get_ticker_symbols
 
 logger = logging.getLogger(__name__)
 
 # Save index data into financial.db
-def save_index_data(ticker: str = "^GSPC", start_date: str = "2015-01-01", end_date: str = "2025-10-01"): # None
+def save_index_data(ticker: str = "^GSPC", start_date: str = "2015-01-01", end_date: str = "2025-10-01"): 
     failed_tickers = []  # track failed tickers
     try:
         data = download_index(ticker=ticker, start_date=start_date, end_date=end_date)
@@ -37,8 +38,7 @@ def save_index_data(ticker: str = "^GSPC", start_date: str = "2015-01-01", end_d
         return {"success": False, "error": str(e)}
 
 # Save stock data into financial.db
-def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date: str = "2025-10-01"): # None
-    failed_tickers = []  # track failed tickers
+def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date: str = "2025-10-01"): 
     try:
         all_data = download_stocks(tickers=tickers, start_date=start_date, end_date=end_date)
         cleaned = clean_stock_panel(all_data, tickers)
@@ -47,12 +47,8 @@ def save_stock_data(tickers: List[str], start_date: str = "2015-01-01", end_date
                 append_df(ticker, df, table="stock_price", conn=get_fin_db())
                 print(f"✅ Data for {ticker} fetched and stored successfully | Saved {len(df)} rows for {ticker}")
             except Exception as ticker_error:
-                failed_tickers.append(ticker)
                 print(f"⭕️ Skipping {ticker} due to error: {ticker_error}")
-        if failed_tickers:
-            print(f"⚠️ Failed tickers: {failed_tickers}. Check if they are delisted or invalid.")
-            refresh_tickers_list(failed_tickers) #TODO
-        return {"success": True, "failed tickers": failed_tickers}
+        return {"success": True, "tickers had been saved": get_tickers()}
     except Exception as e:
         print(f"❌ An error occurred during download: {e}")
         return {"success": False, "error": str(e)}
@@ -82,6 +78,7 @@ def store_ticker_symbols(app):
         logger.debug("app.state not available; tickers stored in utils cache only: %s", e) # expected in some test or minimal contexts; keep a debug log
     except Exception as e:
         logger.exception("Unexpected error while setting app.state.tickers: %s", e) # unexpected errors should be visible in logs for troubleshooting
+    tickers = [s for s in tickers if s not in DROP_STOCK_LIST] # Remove symbols in dropList
     set_tickers(tickers) # always set into utils cache as the canonical source for non-request code
 
 # Save index predictions into financial.db
@@ -121,7 +118,8 @@ def save_index_statistics(data: List[any], ticker: str):
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_index_statistics_data"))
         statistics_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute(sql_template, (data["ticker"], statistics_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
+        record_date = get_last_date_index_price()
+        cursor.execute(sql_template, (statistics_date, data["ticker"], record_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
         db.commit()
         print(f"✅ Index {ticker} statistics saved successfully.")
         return True
@@ -130,13 +128,14 @@ def save_index_statistics(data: List[any], ticker: str):
         return False
     
 # Save stock statistics into financial.db
-def save_stock_statistics(data: Dict[str, str], ticker: str):#
+def save_stock_statistics(data: Dict[str, str], ticker: str):
     try:
         db = get_fin_db()
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_stock_statistics_data"))
         statistics_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute(sql_template, (data["ticker"], statistics_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
+        record_date = get_last_date_stock_price()
+        cursor.execute(sql_template, (statistics_date, data["ticker"], record_date, data["days200_start_date"], data["days200_end_date"], data["days200_ma"]))
         db.commit()
         print(f"✅ Stock {ticker} statistics saved successfully.")
         return True
@@ -150,7 +149,8 @@ def save_stock_rank(data: List[any], ticker: str):
         cursor = db.cursor()
         sql_template = open_sql_file(get_sql_path("insert_stock_rank_data"))
         rank_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute(sql_template, (rank_date, data["ticker"], data["sector"], data["industry"], data["current_price"], data["potential"]))
+        record_date = get_last_date_stock_price()
+        cursor.execute(sql_template, (rank_date, data["ticker"], record_date, data["sector"], data["industry"], data["current_price"], data["potential"]))
         db.commit()
         print(f"✅ Stock {ticker} rank data saved successfully.")
         return True
