@@ -1,6 +1,6 @@
 # app/models.py
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String,ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -18,6 +18,7 @@ class Bookmark(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, ForeignKey("user.email"), nullable=False)
     stock_symbol = Column(String, nullable=False)
+    notify = Column(Boolean, default=False, nullable=False)
     
     # Relationship to User model (optional, but useful for validation/loading user data)
     user = relationship("User", back_populates="bookmark")
@@ -41,11 +42,13 @@ class Token(BaseModel):
 class BookmarkCreate(BaseModel):
     email: str
     stock_symbol: str
+    notify: bool = False
 
 class BookmarkResponse(BaseModel):
     id: int
     email: str
     stock_symbol: str
+    notify: bool
 
     class Config:
         orm_mode = True

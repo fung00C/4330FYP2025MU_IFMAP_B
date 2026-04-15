@@ -64,12 +64,65 @@ async def api_get_bookmarks(
     try:
         df = con.execute(sql, (email,)).fetchall()
         con.commit()
-        data = [row[0] for row in df]  # Assuming the stock_symbol is the first column
+        data = [row[0] for row in df]  
         return {"count": len(data), "data": data}
     except HTTPException as e:
         raise e 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/get_with_notify")
+async def api_get_bookmarks_with_notify(
+    email: str,
+):
+    sql = open_sql_file(get_sql_path("select_bookmark_notify"))
+    con = get_user_db()
+    try:
+        df = con.execute(sql, (email,)).fetchall()
+        con.commit()
+        data = [row[0] for row in df]  # Assuming the stock_symbol is the first column and notify is the second column
+        return {"count": len(data), "data": data}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/update_notify")
+async def api_update_bookmark_notify(
+    email: str,
+    symbol: str
+):
+    sql = open_sql_file(get_sql_path("update_bookmark_notify"))
+    params = (email, symbol)
+    con = get_user_db()
+    try:
+        con.execute(sql, params)
+        con.commit()
+        return {"message": f"Bookmark for {symbol} updated for user {email}"}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/update_notification_setting")
+async def api_update_notification_setting(
+    email: str,
+    frequency: str,
+    day_of_week: str = None,
+    date_of_month: int = None,
+    time_of_day: str = None
+):
+    sql = open_sql_file(get_sql_path("update_notification_setting"))
+    params = (email, frequency, day_of_week, date_of_month, time_of_day)
+    con = get_user_db()
+    try:
+        con.execute(sql, params)
+        con.commit()
+        return {"message": f"Notification setting updated for user {email}"}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))   
 
 """
 router = APIRouter()
