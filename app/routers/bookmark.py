@@ -122,7 +122,9 @@ async def api_update_notification_setting(
     except HTTPException as e:
         raise e 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))   
+        raise HTTPException(status_code=500, detail=str(e)) 
+
+
 
 """
 router = APIRouter()
