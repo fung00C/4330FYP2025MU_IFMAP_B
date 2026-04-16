@@ -7,7 +7,7 @@ from app.core.scheduler import scheduler
 from app.db.connection import create_connection
 from app.utils.app_state import get_user_db, set_fin_db, set_user_db, get_fin_db, get_tickers, get_sql_path
 from app.utils.file import open_sql_file
-from app.tasks.jobs import run_index_statistics_on_startup, run_stock_prediction_on_startup, run_stock_rank_on_startup, run_stock_statistics_on_startup, update_financial_data_job, run_index_prediction_on_startup
+from app.tasks.jobs import run_index_statistics_on_startup, run_stock_prediction_on_startup, run_stock_rank_on_startup, run_stock_statistics_on_startup, update_financial_data_job, run_index_prediction_on_startup, send_scheduled_email_notifications
 from app.tasks.model import load_model
 from app.services.data_ingest import save_stock_category_json, save_stock_detail, save_stock_data, save_index_data, store_ticker_symbols
 from app.repositories.meta import create_table
@@ -60,6 +60,7 @@ async def lifespan(app: FastAPI):
 
     # schedule daily stock data update job at midnight using a cron trigger to run once a day at 00:00.
     scheduler.add_job(update_financial_data_job, 'cron', hour=0, minute=0)
+    scheduler.add_job(send_scheduled_email_notifications, 'interval', minutes=1)  # Schedule email notifications at 8:00 AM daily
     scheduler.start()
 
     try:
