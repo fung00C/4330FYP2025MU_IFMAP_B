@@ -58,8 +58,14 @@ sql_file_delete_bookmark = 'app/db/sql/delete_bookmark.sql'
 sql_file_select_bookmark = 'app/db/sql/select_bookmark.sql'
 sql_file_create_notification_setting_table = 'app/db/sql/create_notification_setting_table.sql'
 sql_file_select_bookmark_notify = 'app/db/sql/select_bookmark_notify.sql'
+sql_file_select_emails_with_notify_bookmarks = 'app/db/sql/select_emails_with_notify_bookmarks.sql'
+sql_file_select_notify_bookmarks_by_email = 'app/db/sql/select_notify_bookmarks_by_email.sql'
 sql_file_update_bookmark_notify = 'app/db/sql/update_bookmark_notify.sql'
 sql_file_update_notification_setting = 'app/db/sql/update_notification_setting.sql'
+sql_file_insert_notification_setting = 'app/db/sql/insert_notification_setting.sql'
+sql_file_delete_notification_setting = 'app/db/sql/delete_notification_setting.sql'
+sql_file_delete_all_bookmarks = 'app/db/sql/delete_all_bookmarks.sql'
+sql_file_select_notification_setting = 'app/db/sql/select_notification_setting.sql'
 
 # database variables
 _fin_db: Optional[sqlite3.Connection] = None
@@ -184,13 +190,25 @@ def get_sql_path(arg) -> Optional[str]:
         case 'insert_stock_rank_data':
             return sql_file_insert_stock_rank_data
         case 'create_notification_setting_table':
-            return sql_file_create_notification_setting_table   
+            return sql_file_create_notification_setting_table
         case 'select_bookmark_notify':
             return sql_file_select_bookmark_notify
+        case 'select_emails_with_notify_bookmarks':
+            return sql_file_select_emails_with_notify_bookmarks
+        case 'select_notify_bookmarks_by_email':
+            return sql_file_select_notify_bookmarks_by_email
         case 'update_bookmark_notify':
             return sql_file_update_bookmark_notify
         case 'update_notification_setting':
             return sql_file_update_notification_setting
+        case 'insert_notification_setting':
+            return sql_file_insert_notification_setting
+        case 'delete_notification_setting':
+            return sql_file_delete_notification_setting
+        case 'delete_all_bookmarks':
+            return sql_file_delete_all_bookmarks
+        case 'select_notification_setting':
+            return sql_file_select_notification_setting
         case _:
             return None
 

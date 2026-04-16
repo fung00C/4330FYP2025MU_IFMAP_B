@@ -7,5 +7,5 @@ CREATE TABLE if not EXISTS notification_setting (
     time_of_day TEXT NOT NULL default '08:00',
 
     FOREIGN KEY (email) REFERENCES user (email) ON DELETE CASCADE,
-    UNIQUE (email, frequency, day_of_week, date_of_month, time_of_day) -- Ensures a user cannot have duplicate notification settings
+    UNIQUE (email) -- Ensures a user cannot have duplicate notification settings
 );

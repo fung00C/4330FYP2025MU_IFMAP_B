@@ -1,0 +1,1 @@
+DELETE FROM bookmark WHERE email = ?;

@@ -1,16 +1,26 @@
 # app/tasks/jobs.py
 import asyncio
+import email
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from http.client import HTTPException
+import smtplib
+from email.mime.text import MIMEText
+from fastapi import HTTPException
 from typing import List
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
+from app.routers import email
 
 from app.services.data_ingest import save_index_statistics, save_stock_data, save_index_data, save_stock_predictions, save_stock_rank, save_stock_statistics
 from app.repositories.indexes import get_any_date_index_price, get_last_index_days200_end_date, get_several_index_statistics, select_index_start_date, get_last_date_index_price, get_several_index_price, get_last_index_window_end_date
 from app.repositories.stocks import get_any_date_stock_price, get_industry_stock_category, get_last_date_stock_price, get_last_stock_days200_end_date, get_last_stock_window_end_date, get_sector_stock_category, get_several_stock_price, get_several_stock_statistics, select_stock_start_date
 from app.tasks.algorithm import calculate_stock_potensoial, days_index_moving_average, days_stock_moving_average, compute_rsi
-from app.utils.app_state import get_tickers, get_model_params
+from app.utils.app_state import get_tickers, get_model_params, get_user_db, get_sql_path
 from app.tasks.predictions import destandardize_data, predict, standardize_index_data, standardize_stock_data, PredictionInput, PredictionInput_stock
 from app.services.data_ingest import save_index_predictions
+from app.routers.email import generate_stock_chart
+from app.utils.file import open_sql_file
 
 # update stock data job for scheduler of daily updates
 async def update_financial_data_job(arg:str = "schedule"):
@@ -288,3 +298,86 @@ def run_stock_rank_on_startup(tickers: List[str]):
             print(f"Potential: {potential}%")
     except Exception as e:
         print(f"❌ Error during startup stock ranking: {e}")
+
+# Send scheduled email notifications
+def send_scheduled_email_notifications():
+    try:
+        from app.utils.file import open_sql_file
+        from app.utils.app_state import get_sql_path, get_user_db
+
+        sender_email = "ifmapyishu3@gmail.com"
+        sender_password = "wrvukaqqnzcszwge"
+
+        # Get all emails that have bookmarks with notify=true and their notification settings
+        sql_emails = open_sql_file(get_sql_path("select_emails_with_notify_bookmarks"))
+        con = get_user_db()
+        emails = con.execute(sql_emails).fetchall()
+
+        for email_row in emails:
+            email = email_row[0]  # Extract email from tuple
+            sql_notification_setting = open_sql_file(get_sql_path("select_notification_setting"))
+            notification_setting = con.execute(sql_notification_setting, (email,)).fetchone()
+            if match_notification_time(notification_setting[0], notification_setting[3], notification_setting[1], notification_setting[2]):
+                # Get all stock symbols for this email that have notify=true
+                sql_bookmarks = open_sql_file(get_sql_path("select_notify_bookmarks_by_email"))
+                bookmarks = con.execute(sql_bookmarks, (email,)).fetchall()
+                for bookmark in bookmarks:
+                    # Send email with stock chart for each bookmarked stock
+                    try:
+                        subject = f"Your Bookmark Notification--{bookmark[0]}"
+
+                        message = MIMEMultipart("alternative")
+                        message["From"] = sender_email
+                        message["To"] = email
+                        message["Subject"] = subject
+
+                        html_body = f"""
+                        <html>
+                        <body>
+                            <p>Dear User,</p>
+                            <p>Here's your latest stock data for {bookmark[0]}:</p>
+                            <img src="data:image/png;base64,{generate_stock_chart(bookmark[0])}" 
+                            alt="{bookmark[0]} Chart" style="max-width:100%; height:auto;">
+                            <p>Thank you for using our service!</p>
+                        </body>
+                        </html>
+                        """
+                        message.attach(MIMEText(html_body, "html"))
+
+                        try:
+                            with smtplib.SMTP("smtp.gmail.com", 587) as server:
+                                server.starttls()
+                                server.login(sender_email, sender_password)
+                                server.send_message(message)
+
+                            print(f"Sending email to {email} successfully.")
+                        except Exception as e:
+                            raise HTTPException(status_code=500, detail=str(e))
+                    except Exception as e:
+                        print(f"❌ Error sending email to {email} for stock {bookmark[0]}: {e}")
+            else:
+                continue
+           
+            
+        print(f"✅ Sent scheduled email notifications to {len(emails)} users")
+
+    except Exception as e:
+        print(f"❌ Error during scheduled email notifications: {e}")
+
+def match_notification_time(frequency: str, notification_time: str, day_of_week: str = None, date: int = None) -> bool:
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
+    if frequency == "daily":
+        return current_time == notification_time
+    elif frequency == "weekly":
+        current_day_of_week = datetime.now().strftime("%A")
+        return current_time == notification_time and current_day_of_week == day_of_week
+    elif frequency == "monthly":
+        current_date = datetime.now().day
+        # check current month has the specified date, if not, use the last day of the month
+        last_day_of_month = (datetime(now.year, now.month + 1, 1) - timedelta(days=1)).day
+        if date > last_day_of_month:            
+            date = last_day_of_month
+        return current_time == notification_time and current_date == date
+    else:
+        return False

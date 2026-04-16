@@ -18,3 +18,58 @@
 2026-04-15 21:14:56,811 - auth_logger - INFO - Account DELETED: 1234@1234
 2026-04-15 21:15:28,103 - auth_logger - INFO - Login attempt for user: 123@123
 2026-04-15 21:15:29,098 - auth_logger - INFO - Login Successfully
+2026-04-15 22:58:52,091 - auth_logger - INFO - Login attempt for user: asdf@asdf
+2026-04-15 22:58:52,315 - auth_logger - INFO - Login Successfully
+2026-04-15 23:01:16,147 - auth_logger - INFO - Login attempt for user: asdf@asdf
+2026-04-15 23:01:16,577 - auth_logger - INFO - Login Successfully
+2026-04-15 23:58:58,971 - auth_logger - INFO - User created successfully: 123@123
+2026-04-15 23:59:10,080 - auth_logger - INFO - Login attempt for user: 123@123
+2026-04-15 23:59:10,308 - auth_logger - INFO - Login Successfully
+2026-04-15 23:59:17,151 - auth_logger - INFO - User profile accessed: 123@123
+2026-04-15 23:59:17,153 - auth_logger - INFO - User profile accessed: 123@123
+2026-04-15 23:59:25,747 - auth_logger - INFO - Account DELETED: 123@123
+2026-04-15 23:59:47,957 - auth_logger - INFO - User created successfully: 123@123
+2026-04-16 00:00:01,252 - auth_logger - INFO - Login attempt for user: 123@123
+2026-04-16 00:00:01,465 - auth_logger - INFO - Login Successfully
+2026-04-16 00:00:19,980 - auth_logger - INFO - Account DELETED: 123@123
+2026-04-16 00:04:10,200 - auth_logger - INFO - Login attempt for user: asdf@asdf
+2026-04-16 00:04:10,420 - auth_logger - INFO - Login Successfully
+2026-04-16 00:23:54,563 - auth_logger - INFO - User created successfully: 123@123
+2026-04-16 00:24:02,403 - auth_logger - INFO - Login attempt for user: 123@123
+2026-04-16 00:24:02,608 - auth_logger - INFO - Login Successfully
+2026-04-16 00:50:09,796 - auth_logger - INFO - User profile accessed: 123@123
+2026-04-16 00:50:09,798 - auth_logger - INFO - Login attempt for user: 123@123
+2026-04-16 00:50:10,026 - auth_logger - INFO - Login Successfully
+2026-04-16 00:50:10,029 - auth_logger - INFO - Login attempt for user: 123@123
+2026-04-16 00:50:10,249 - auth_logger - INFO - Login Successfully
+2026-04-16 00:50:10,252 - auth_logger - INFO - User profile accessed: 123@123
+2026-04-16 00:50:46,669 - auth_logger - INFO - User profile accessed: 123@123
+2026-04-16 00:50:46,673 - auth_logger - INFO - User profile accessed: 123@123
+2026-04-16 00:50:50,869 - auth_logger - INFO - Account DELETED: 123@123
+2026-04-16 12:05:26,385 - auth_logger - INFO - User created successfully: 123@123
+2026-04-16 12:24:51,252 - auth_logger - INFO - Login attempt for user: asdf@asdf
+2026-04-16 12:24:51,491 - auth_logger - INFO - Login Successfully
+2026-04-16 13:01:14,748 - auth_logger - INFO - Login attempt for user: 123@123
+2026-04-16 13:01:14,964 - auth_logger - INFO - Login Successfully
+2026-04-16 13:01:48,494 - auth_logger - INFO - User profile accessed: 123@123
+2026-04-16 13:01:48,525 - auth_logger - INFO - User profile accessed: 123@123
+2026-04-16 13:02:00,795 - auth_logger - INFO - Account DELETED: 123@123
+2026-04-16 19:15:15,391 - auth_logger - INFO - User created successfully: s1348188@live.hkmu.edu.hk
+2026-04-16 19:15:36,432 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-16 19:15:36,650 - auth_logger - INFO - Login Successfully
+2026-04-16 20:19:35,730 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-16 20:19:35,944 - auth_logger - INFO - Login Successfully
+2026-04-16 20:19:35,944 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-16 20:19:36,152 - auth_logger - INFO - Login Successfully
+2026-04-16 20:19:36,152 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-16 20:19:36,380 - auth_logger - INFO - Login Successfully
+2026-04-16 20:19:36,380 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-16 20:19:36,585 - auth_logger - INFO - Login Successfully
+2026-04-16 20:19:36,585 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-16 20:19:36,811 - auth_logger - INFO - Login Successfully
+2026-04-16 20:19:36,811 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-16 20:19:37,027 - auth_logger - INFO - Login Successfully
+2026-04-16 20:34:49,984 - auth_logger - INFO - User profile accessed: s1348188@live.hkmu.edu.hk
+2026-04-16 20:34:58,338 - auth_logger - INFO - User profile accessed: s1348188@live.hkmu.edu.hk
+2026-04-16 20:34:58,351 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-16 20:34:58,558 - auth_logger - INFO - Login Successfully

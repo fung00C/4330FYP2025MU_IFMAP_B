@@ -55,6 +55,22 @@ async def api_remove_bookmark(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.delete("/remove_all")
+async def api_remove_all_bookmarks(
+    email: str,
+):
+    sql = open_sql_file(get_sql_path('delete_all_bookmarks'))
+    params = (email,)
+    con = get_user_db()
+    try:
+        con.execute(sql, params)
+        con.commit()
+        return {"message": f"All bookmarks removed for user {email}"}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/get")
 async def api_get_bookmarks(
     email: str,
@@ -107,13 +123,13 @@ async def api_update_bookmark_notify(
 @router.post("/update_notification_setting")
 async def api_update_notification_setting(
     email: str,
+    time_of_day: str,
     frequency: str,
     day_of_week: str = None,
-    date_of_month: int = None,
-    time_of_day: str = None
+    date_of_month: int = None
 ):
     sql = open_sql_file(get_sql_path("update_notification_setting"))
-    params = (email, frequency, day_of_week, date_of_month, time_of_day)
+    params = (frequency, day_of_week, date_of_month, time_of_day, email)
     con = get_user_db()
     try:
         con.execute(sql, params)
@@ -129,13 +145,9 @@ async def api_update_notification_setting(
 @router.post("/add_notification_setting")
 async def api_add_notification_setting(
     email: str,
-    frequency: str,
-    day_of_week: str = None,
-    date_of_month: int = None,
-    time_of_day: str = None
 ):
     sql = open_sql_file(get_sql_path("insert_notification_setting"))
-    params = (email, frequency, day_of_week, date_of_month, time_of_day)
+    params = (email, 'daily', None, None, '08:00')  # Default values for frequency, day_of_week, date_of_month, time_of_day
     con = get_user_db()
     try:
         con.execute(sql, params)
@@ -160,7 +172,47 @@ async def api_delete_notification_setting(
     except HTTPException as e:
         raise e 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))   
+        raise HTTPException(status_code=500, detail=str(e)) 
+
+@router.get("/get_notification_setting")
+async def api_get_notification_setting(
+    email: str,
+):
+    sql = open_sql_file(get_sql_path("select_notification_setting"))
+    con = get_user_db()
+    try:
+        df = con.execute(sql, (email,)).fetchone()
+        con.commit()
+        if df is None:
+            return {"message": f"No notification setting found for user {email}"}
+        data = {
+            "frequency": df[0],
+            "day_of_week": df[1],
+            "date_of_month": df[2],
+            "time_of_day": df[3]
+        }
+        return {"data": data}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))        
+
+@router.get("/get_emails_with_notify_bookmarks")
+async def api_get_emails_with_notify_bookmarks():
+    sql = open_sql_file(get_sql_path("select_emails_with_notify_bookmarks"))
+    con = get_user_db()
+    try:
+        df = con.execute(sql).fetchall()
+        con.commit()
+        data = [row[0] for row in df]  # Assuming the email is the first column
+        return {"count": len(data), "data": data}
+    except HTTPException as e:
+        raise e 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 """
 router = APIRouter()
 
