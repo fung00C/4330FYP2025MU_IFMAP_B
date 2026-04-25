@@ -219,7 +219,7 @@ def set_tickers(tickers: List[str]) -> None:
         # store a shallow copy to avoid external mutation
         _tickers = list(tickers) if tickers is not None else []
         # Used in fyp demo only, when open this line remember to comment out the line above it, which is for production use.
-        #_tickers = ['A', 'AAPL', 'ABBV', 'ABNB', 'ABT', 'ACGL', 'ACN', 'ADBE', 'ADI', 'ADM', 'ADP', 'ADSK', 'AEE', 'AEP', 'AES', 'AFL', 'AIG', 'AIZ', 'AJG', 'AKAM', 'ALB', 'ALGN', 'ALL', 'ALLE', 'AMAT', 'AMCR', 'AMD', 'AME', 'AMGN', 'AMP', 'AMT', 'AMZN', 'ANET', 'AON', 'AOS', 'APA', 'APD', 'APH', 'APTV', 'ARE', 'ATO', 'AVB', 'AVGO', 'AVY', 'GOOGL', 'MSFT', 'TSLA']
+        #_tickers = ['AAPL', 'GOOGL', 'MSFT', 'TSLA']
         _tickers_last_updated = time.time()
 
 def get_tickers() -> List[str]:
