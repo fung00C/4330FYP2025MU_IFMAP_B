@@ -60,7 +60,7 @@ async def lifespan(app: FastAPI):
 
     # schedule daily stock data update job at midnight using a cron trigger to run once a day at 00:00.
     scheduler.add_job(update_financial_data_job, 'cron', hour=0, minute=0)
-    scheduler.add_job(send_scheduled_email_notifications, 'interval', minutes=1)  # Schedule email notifications at 8:00 AM daily
+    scheduler.add_job(send_scheduled_email_notifications, 'interval', minutes=1)  # check any pending notifications every minute
     scheduler.start()
 
     try:

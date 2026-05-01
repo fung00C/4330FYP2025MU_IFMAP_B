@@ -73,3 +73,27 @@
 2026-04-16 20:34:58,338 - auth_logger - INFO - User profile accessed: s1348188@live.hkmu.edu.hk
 2026-04-16 20:34:58,351 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
 2026-04-16 20:34:58,558 - auth_logger - INFO - Login Successfully
+2026-04-16 23:59:53,825 - auth_logger - INFO - Login attempt for user: asdf@asdf
+2026-04-16 23:59:54,130 - auth_logger - INFO - Login Successfully
+2026-04-17 00:27:40,814 - auth_logger - INFO - User profile accessed: asdf@asdf
+2026-04-17 00:27:40,819 - auth_logger - INFO - User profile accessed: asdf@asdf
+2026-04-17 01:11:57,345 - auth_logger - INFO - User profile accessed: asdf@asdf
+2026-04-17 01:11:57,349 - auth_logger - INFO - User profile accessed: asdf@asdf
+2026-04-17 01:12:08,787 - auth_logger - INFO - Password changed successfully for user: asdf@asdf
+2026-04-17 01:12:19,209 - auth_logger - INFO - Login attempt for user: asdf@asdf
+2026-04-17 01:12:19,480 - auth_logger - INFO - Login Successfully
+2026-04-17 01:12:28,685 - auth_logger - INFO - User profile accessed: asdf@asdf
+2026-04-17 01:12:28,691 - auth_logger - INFO - User profile accessed: asdf@asdf
+2026-04-17 01:13:03,076 - auth_logger - INFO - Password changed successfully for user: asdf@asdf
+2026-04-17 15:17:46,414 - auth_logger - INFO - User created successfully: test@test
+2026-04-17 15:17:59,533 - auth_logger - INFO - Login attempt for user: test@test
+2026-04-17 15:17:59,794 - auth_logger - INFO - Login Successfully
+2026-04-20 18:12:59,334 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-20 18:12:59,610 - auth_logger - INFO - Login Successfully
+2026-04-26 01:42:30,129 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-26 01:42:30,459 - auth_logger - INFO - Login Successfully
+2026-04-26 21:18:56,335 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-04-26 21:18:56,550 - auth_logger - INFO - Login Successfully
+2026-05-01 04:30:33,491 - auth_logger - INFO - Login attempt for user: s1348188@live,hkmu.edu.hk
+2026-05-01 04:30:46,488 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
+2026-05-01 04:30:46,769 - auth_logger - INFO - Login Successfully
