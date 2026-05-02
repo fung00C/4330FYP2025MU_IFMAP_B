@@ -73,3 +73,9 @@
 2026-04-16 20:34:58,338 - auth_logger - INFO - User profile accessed: s1348188@live.hkmu.edu.hk
 2026-04-16 20:34:58,351 - auth_logger - INFO - Login attempt for user: s1348188@live.hkmu.edu.hk
 2026-04-16 20:34:58,558 - auth_logger - INFO - Login Successfully
+2026-04-26 11:46:07,410 - auth_logger - INFO - Login attempt for user: 123@123.com
+2026-04-26 11:46:07,776 - auth_logger - INFO - Login Successfully
+2026-04-26 11:46:29,744 - auth_logger - INFO - User profile accessed: 123@123.com
+2026-04-26 11:46:29,747 - auth_logger - INFO - User profile accessed: 123@123.com
+2026-04-26 12:31:40,482 - auth_logger - INFO - Login attempt for user: 123@123.com
+2026-04-26 12:31:40,852 - auth_logger - INFO - Login Successfully
